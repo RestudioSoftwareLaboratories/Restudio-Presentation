@@ -7,516 +7,117 @@
     <link rel="icon" href="https://i.postimg.cc/66MLbbg8/restudio-profile.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-        :root {
-            --bg: #1e1e1e;
-            --surface: #252526;
-            --text: #cccccc;
-            --primary: #007acc;
-            --border: #3c3c3c;
-            --hover: #2a2d2e;
-            --canvas-bg: #2b2b2b;
-            --sidebar-width: 280px;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1e1e1e;
-            color: #cccccc;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .top-bar {
-            height: 48px;
-            background: #000000;
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            gap: 12px;
-            flex-shrink: 0;
-            z-index: 100;
-            justify-content: space-between;
-        }
-        .top-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .top-bar img.logo {
-            height: 28px;
-            width: auto;
-        }
-        .top-bar .brand-text {
-            font-family: 'Tiny5', sans-serif;
-            font-size: 22px;
-            color: #ffffff;
-            letter-spacing: 1px;
-        }
-        .exit-focus-btn {
-            display: none;
-            background: #3c3c3c;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        body.focus-mode .exit-focus-btn {
-            display: inline-block;
-        }
-        .toolbar {
-            background: #2d2d2d;
-            border-bottom: 1px solid #3c3c3c;
-            flex-shrink: 0;
-            padding: 4px 8px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 4px;
-            min-height: 48px;
-            overflow-x: auto;
-            overflow-y: visible;
-            z-index: 99;
-        }
-        .tool-group {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            border-right: 1px solid #4a4a4a;
-            padding-right: 6px;
-            margin-right: 6px;
-        }
-        .tool-group:last-child {
-            border-right: none;
-        }
-        .tool-btn {
-            background: transparent;
-            border: none;
-            color: #e0e0e0;
-            padding: 6px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 13px;
-            white-space: nowrap;
-            transition: 0.15s;
-            position: relative;
-        }
-        .tool-btn:hover {
-            background: #3c3c3c;
-        }
-        .tool-btn .material-icons {
-            font-size: 18px;
-        }
-        .tool-btn.active {
-            background: #094771;
-        }
-        .tool-btn:disabled {
-            opacity: 0.4;
-            pointer-events: none;
-            background: transparent;
-        }
-        /* Fix dropdowns being behind - increased z-index */
-        .dropdown-container {
-            position: relative;
-            display: inline-block;
-            z-index: 1002;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            background: #2d2d2d;
-            border: 1px solid #4a4a4a;
-            border-radius: 8px;
-            min-width: 180px;
-            max-height: 350px;
-            overflow-y: auto;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
-            z-index: 1003;
-            padding: 6px 0;
-            flex-direction: column;
-        }
-        .dropdown-container.open .dropdown-content {
-            display: flex;
-        }
-        .dropdown-item {
-            padding: 8px 18px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            font-size: 13px;
-            color: #f0f0f0;
-        }
-        .dropdown-item:hover {
-            background: #094771;
-        }
-        .dropdown-item .check-icon {
-            margin-left: auto;
-            font-size: 16px;
-            color: #4ec9ff;
-        }
-        .color-picker-popup {
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            background: #2d2d2d;
-            border: 1px solid #4a4a4a;
-            border-radius: 8px;
-            padding: 12px;
-            display: none;
-            z-index: 1004;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
-            min-width: 240px;
-        }
-        .color-picker-popup.show {
-            display: block;
-        }
-        .color-picker-grid {
-            display: grid;
-            grid-template-columns: repeat(8, 28px);
-            gap: 4px;
-            margin-bottom: 10px;
-        }
-        .color-swatch {
-            width: 28px;
-            height: 28px;
-            border-radius: 4px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.15s;
-        }
-        .color-swatch:hover {
-            transform: scale(1.15);
-            border-color: #fff;
-            z-index: 2;
-        }
-        .color-picker-input {
-            width: 100%;
-            height: 40px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            background: #3c3c3c;
-        }
-        .color-picker-label {
-            font-size: 12px;
-            color: #aaa;
-            margin-bottom: 6px;
-            display: block;
-        }
-        .zoom-level {
-            color: #aaa;
-            font-size: 12px;
-            margin: 0 4px;
-            min-width: 40px;
-            text-align: center;
-        }
-        .app-main {
-            display: flex;
-            flex: 1;
-            min-height: 0;
-            overflow: hidden;
-        }
-        .slide-sidebar {
-            width: var(--sidebar-width);
-            background: #252526;
-            border-right: 1px solid #3c3c3c;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            flex-shrink: 0;
-            z-index: 50;
-        }
-        .sidebar-header {
-            padding: 16px;
-            border-bottom: 1px solid #3c3c3c;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #2d2d2d;
-            font-weight: 600;
-        }
-        .sidebar-header span {
-            font-size: 14px;
-            letter-spacing: 0.5px;
-        }
-        .add-slide-btn {
-            background: #0e639c;
-            border: none;
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: 0.2s;
-        }
-        .add-slide-btn:hover {
-            background: #1177bb;
-        }
-        .slides-list {
-            flex: 1;
-            padding: 12px 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .slide-item {
-            background: #2d2d2d;
-            border-radius: 10px;
-            padding: 12px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: 0.1s;
-            border: 1px solid transparent;
-        }
-        .slide-item.active {
-            background: #094771;
-            border-color: #4c9aff;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        }
-        .slide-item:hover:not(.active) {
-            background: #3a3a3a;
-        }
-        .slide-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            overflow: hidden;
-            flex: 1;
-        }
-        .slide-name {
-            font-size: 14px;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .slide-index {
-            font-size: 11px;
-            color: #aaa;
-        }
-        .slide-actions {
-            display: flex;
-            gap: 6px;
-            margin-left: 8px;
-            flex-shrink: 0;
-        }
-        .slide-actions button {
-            background: transparent;
-            border: none;
-            color: #ddd;
-            cursor: pointer;
-            border-radius: 6px;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: 0.15s;
-        }
-        .slide-actions button:hover {
-            background: #4a4a4a;
-        }
-        .slide-actions .rename-slide-btn:hover {
-            background: #3a6ea5;
-            color: white;
-        }
-        .slide-actions .delete-slide-btn:hover {
-            background: #a53a3a;
-            color: #ffaaaa;
-        }
-        .canvas-wrapper {
-            flex: 1;
-            background: #1e1e1e;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: auto;
-            position: relative;
-        }
-        #fabric-canvas-container {
-            background: var(--canvas-bg);
-            box-shadow: 0 0 0 1px #3c3c3c, 0 8px 20px rgba(0, 0, 0, 0.4);
-            margin: 20px;
-            width: 900px;
-            height: 600px;
-            position: relative;
-        }
-        canvas {
-            display: block;
-        }
-        body.focus-mode .toolbar, body.focus-mode .slide-sidebar {
-            display: none;
-        }
-        .effect-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        .effect-modal.active {
-            display: flex;
-        }
-        .effect-panel {
-            background: #2d2d2d;
-            border-radius: 16px;
-            width: 400px;
-            max-width: 90%;
-            padding: 20px;
-            border: 1px solid #4a4a4a;
-        }
-        .effect-panel h3 {
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .effect-panel h3 button {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-        }
-        .effect-panel .field {
-            margin-bottom: 14px;
-        }
-        .effect-panel label {
-            display: block;
-            font-size: 12px;
-            margin-bottom: 6px;
-            color: #aaa;
-        }
-        .effect-panel select, .effect-panel input {
-            width: 100%;
-            background: #3c3c3c;
-            border: 1px solid #555;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .effect-panel .row-2col {
-            display: flex;
-            gap: 12px;
-        }
-        .row-2col .field {
-            flex: 1;
-        }
-        .radio-group {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-        .radio-group label {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        .apply-effect-btn {
-            background: #0e639c;
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            width: 100%;
-            font-weight: bold;
-            margin-top: 12px;
-            cursor: pointer;
-        }
-        .apply-effect-btn:hover {
-            background: #1177bb;
-        }
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: #2d2d2d; }
-        ::-webkit-scrollbar-thumb { background: #555; border-radius: 6px; }
-    </style>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap"
+        rel="stylesheet"
+    >
+    <link
+        href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        rel="stylesheet"
+    >
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js">
+    </script>
+    <!-- ✅ إصلاح أمني: CSP يمنع تنفيذ السكربتات غير المصرح بها -->
+    <meta
+        http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://i.postimg.cc https://api.qrserver.com; connect-src 'self' https://api.qrserver.com;"
+    >
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="top-bar">
         <div class="top-left">
-            <img class="logo" src="https://i.postimg.cc/s2j0rzBZ/swrh-restudio.png" alt="ReStudio Logo">
+            <img
+                class="logo"
+                src="https://i.postimg.cc/s2j0rzBZ/swrh-restudio.png"
+                alt="ReStudio Logo"
+            >
             <span class="brand-text">Presentation</span>
         </div>
-        <button class="exit-focus-btn" id="exitFocusBtn"><span class="material-icons">close_fullscreen</span> Exit</button>
+        <button class="exit-focus-btn" id="exitFocusBtn">
+            <span class="material-icons">close_fullscreen</span> Exit
+        </button>
     </header>
 
     <div class="toolbar" id="toolbar">
         <div class="tool-group">
-            <button class="tool-btn" data-action="newDoc"><span class="material-icons">note_add</span> New slide</button>
+            <button class="tool-btn" data-action="newDoc">
+                <span class="material-icons">note_add</span> New slide
+            </button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="undo"><span class="material-icons">undo</span></button>
-            <button class="tool-btn" data-action="redo"><span class="material-icons">redo</span></button>
-            <button class="tool-btn" data-action="deleteSelected"><span class="material-icons">delete</span> Delete</button>
+            <button class="tool-btn" data-action="undo">
+                <span class="material-icons">undo</span>
+            </button>
+            <button class="tool-btn" data-action="redo">
+                <span class="material-icons">redo</span>
+            </button>
+            <button class="tool-btn" data-action="deleteSelected">
+                <span class="material-icons">delete</span> Delete
+            </button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="addText"><span class="material-icons">text_fields</span> Text</button>
-            <button class="tool-btn" data-action="addImage"><span class="material-icons">image</span> Image</button>
+            <button class="tool-btn" data-action="addText">
+                <span class="material-icons">text_fields</span> Text
+            </button>
+            <button class="tool-btn" data-action="addImage">
+                <span class="material-icons">image</span> Image
+            </button>
             <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
-            <button class="tool-btn" data-action="addRectangle"><span class="material-icons">crop_square</span> Rectangle</button>
-            <button class="tool-btn" data-action="addCircle"><span class="material-icons">circle</span> Circle</button>
-            <button class="tool-btn" data-action="addQR"><span class="material-icons">qr_code</span> QR</button>
+            <button class="tool-btn" data-action="addRectangle">
+                <span class="material-icons">crop_square</span> Rectangle
+            </button>
+            <button class="tool-btn" data-action="addCircle">
+                <span class="material-icons">circle</span> Circle
+            </button>
+            <button class="tool-btn" data-action="addQR">
+                <span class="material-icons">qr_code</span> QR
+            </button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="bold"><span class="material-icons">format_bold</span></button>
-            <button class="tool-btn" data-action="italic"><span class="material-icons">format_italic</span></button>
-            <button class="tool-btn" data-action="underline"><span class="material-icons">format_underlined</span></button>
+            <button class="tool-btn" data-action="bold">
+                <span class="material-icons">format_bold</span>
+            </button>
+            <button class="tool-btn" data-action="italic">
+                <span class="material-icons">format_italic</span>
+            </button>
+            <button class="tool-btn" data-action="underline">
+                <span class="material-icons">format_underlined</span>
+            </button>
             <div class="dropdown-container" id="fontSizeContainer">
-                <button class="tool-btn"><span class="material-icons">format_size</span> Size</button>
+                <button class="tool-btn">
+                    <span class="material-icons">format_size</span> Size
+                </button>
                 <div class="dropdown-content" id="fontSizeMenu">
-                    <div class="dropdown-item" data-fontsize="12">12px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="18">18px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="24">24px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="32">32px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="48">48px <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-fontsize="12">12px</div>
+                    <div class="dropdown-item" data-fontsize="18">18px</div>
+                    <div class="dropdown-item" data-fontsize="24">24px</div>
+                    <div class="dropdown-item" data-fontsize="32">32px</div>
+                    <div class="dropdown-item" data-fontsize="48">48px</div>
                 </div>
             </div>
-            <button class="tool-btn" data-action="indentInc"><span class="material-icons">format_indent_increase</span></button>
-            <button class="tool-btn" data-action="indentDec"><span class="material-icons">format_indent_decrease</span></button>
+            <button class="tool-btn" data-action="indentInc">
+                <span class="material-icons">format_indent_increase</span>
+            </button>
+            <button class="tool-btn" data-action="indentDec">
+                <span class="material-icons">format_indent_decrease</span>
+            </button>
             <div class="dropdown-container" id="lineHeightContainer">
-                <button class="tool-btn"><span class="material-icons">format_line_spacing</span> Line H</button>
+                <button class="tool-btn">
+                    <span class="material-icons">format_line_spacing</span> Line H
+                </button>
                 <div class="dropdown-content" id="lineHeightMenu">
-                    <div class="dropdown-item" data-lineheight="1">1.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="1.5">1.5 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="2">2.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="2.5">2.5 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="3">3.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-lineheight="1">1.0</div>
+                    <div class="dropdown-item" data-lineheight="1.5">1.5</div>
+                    <div class="dropdown-item" data-lineheight="2">2.0</div>
+                    <div class="dropdown-item" data-lineheight="2.5">2.5</div>
+                    <div class="dropdown-item" data-lineheight="3">3.0</div>
                 </div>
             </div>
             <div class="dropdown-container" id="textTransformContainer">
-                <button class="tool-btn"><span class="material-icons">text_fields</span> Aa</button>
+                <button class="tool-btn">
+                    <span class="material-icons">text_fields</span> Aa
+                </button>
                 <div class="dropdown-content" id="textTransformMenu">
                     <div class="dropdown-item" data-transform="uppercase">UPPERCASE</div>
                     <div class="dropdown-item" data-transform="lowercase">lowercase</div>
@@ -526,56 +127,96 @@
         </div>
         <div class="tool-group">
             <div class="dropdown-container" id="fillColorContainer">
-                <button class="tool-btn" id="fillColorBtn"><span class="material-icons">format_color_text</span> Fill</button>
+                <button class="tool-btn" id="fillColorBtn">
+                    <span class="material-icons">format_color_text</span> Fill
+                </button>
                 <div class="color-picker-popup" id="fillColorPicker">
                     <div class="color-picker-grid" id="fillColorGrid"></div>
+                    <label class="color-picker-label" for="fillColorCustom">Custom:</label>
                     <input type="color" class="color-picker-input" id="fillColorCustom" value="#ffffff">
                 </div>
             </div>
             <div class="dropdown-container" id="bgColorContainer">
-                <button class="tool-btn" id="bgColorBtn"><span class="material-icons">format_color_fill</span> BG</button>
+                <button class="tool-btn" id="bgColorBtn">
+                    <span class="material-icons">format_color_fill</span> BG
+                </button>
                 <div class="color-picker-popup" id="bgColorPicker">
                     <div class="color-picker-grid" id="bgColorGrid"></div>
+                    <label class="color-picker-label" for="bgColorCustom">Custom:</label>
                     <input type="color" class="color-picker-input" id="bgColorCustom" value="#3498db">
                 </div>
             </div>
             <div class="dropdown-container" id="canvasBgContainer">
-                <button class="tool-btn"><span class="material-icons">palette</span> Page BG</button>
+                <button class="tool-btn">
+                    <span class="material-icons">palette</span> Page BG
+                </button>
                 <div class="color-picker-popup" id="canvasBgPicker">
                     <div class="color-picker-grid" id="canvasBgGrid"></div>
+                    <label class="color-picker-label" for="canvasBgCustom">Custom:</label>
                     <input type="color" class="color-picker-input" id="canvasBgCustom" value="#2b2b2b">
                 </div>
             </div>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="alignLeft"><span class="material-icons">format_align_left</span></button>
-            <button class="tool-btn" data-action="alignCenter"><span class="material-icons">format_align_center</span></button>
-            <button class="tool-btn" data-action="alignRight"><span class="material-icons">format_align_right</span></button>
+            <button class="tool-btn" data-action="alignLeft">
+                <span class="material-icons">format_align_left</span>
+            </button>
+            <button class="tool-btn" data-action="alignCenter">
+                <span class="material-icons">format_align_center</span>
+            </button>
+            <button class="tool-btn" data-action="alignRight">
+                <span class="material-icons">format_align_right</span>
+            </button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="bringForward"><span class="material-icons">arrow_upward</span> Forward</button>
-            <button class="tool-btn" data-action="sendBackward"><span class="material-icons">arrow_downward</span> Backward</button>
-            <button class="tool-btn" data-action="zoomIn"><span class="material-icons">zoom_in</span></button>
+            <button class="tool-btn" data-action="bringForward">
+                <span class="material-icons">arrow_upward</span> Forward
+            </button>
+            <button class="tool-btn" data-action="sendBackward">
+                <span class="material-icons">arrow_downward</span> Backward
+            </button>
+            <button class="tool-btn" data-action="zoomIn">
+                <span class="material-icons">zoom_in</span>
+            </button>
             <span class="zoom-level" id="zoomLevelDisplay">100%</span>
-            <button class="tool-btn" data-action="zoomOut"><span class="material-icons">zoom_out</span></button>
-            <button class="tool-btn" data-action="focusMode"><span class="material-icons">center_focus_strong</span> Focus</button>
+            <button class="tool-btn" data-action="zoomOut">
+                <span class="material-icons">zoom_out</span>
+            </button>
+            <button class="tool-btn" data-action="focusMode">
+                <span class="material-icons">center_focus_strong</span> Focus
+            </button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="group"><span class="material-icons">group_work</span> Group</button>
-            <button class="tool-btn" data-action="ungroup"><span class="material-icons">ungroup</span> Ungroup</button>
-            <button class="tool-btn" id="effectBtn"><span class="material-icons">animation</span> Effect</button>
+            <button class="tool-btn" data-action="group">
+                <span class="material-icons">group_work</span> Group
+            </button>
+            <button class="tool-btn" data-action="ungroup">
+                <span class="material-icons">ungroup</span> Ungroup
+            </button>
+            <button class="tool-btn" id="effectBtn">
+                <span class="material-icons">animation</span> Effect
+            </button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="exportRept"><span class="material-icons">download</span> Export REPT</button>
-            <button class="tool-btn" id="importJsonBtn"><span class="material-icons">upload</span> Import REPT</button>
-            <button class="tool-btn" id="previewModeBtn"><span class="material-icons">slideshow</span> Preview Mode</button>
+            <button class="tool-btn" data-action="exportRept">
+                <span class="material-icons">download</span> Export REPT
+            </button>
+            <button class="tool-btn" id="importJsonBtn">
+                <span class="material-icons">upload</span> Import REPT
+            </button>
+            <button class="tool-btn" id="previewModeBtn">
+                <span class="material-icons">slideshow</span> Preview Mode
+            </button>
             <input type="file" id="importFileInput" accept=".rept,.restudio,.json" style="display:none;">
         </div>
     </div>
 
     <div class="app-main">
         <div class="slide-sidebar" id="slideSidebar">
-            <div class="sidebar-header"><span>📑 SLIDES</span><button class="add-slide-btn" id="addSlideBtn">+</button></div>
+            <div class="sidebar-header">
+                <span>📑 SLIDES</span>
+                <button class="add-slide-btn" id="addSlideBtn">+</button>
+            </div>
             <div class="slides-list" id="slidesList"></div>
         </div>
         <div class="canvas-wrapper" id="canvasWrapper">
@@ -588,7 +229,7 @@
         <div class="effect-panel">
             <h3>✨ Object Effect <button id="closeEffectModal">&times;</button></h3>
             <div class="field">
-                <label>Animation Effect</label>
+                <label for="effectSelect">Animation Effect</label>
                 <select id="effectSelect">
                     <option value="fadeIn">Fade In</option>
                     <option value="slideInLeft">Slide In Left</option>
@@ -603,466 +244,41 @@
                 </select>
             </div>
             <div class="row-2col">
-                <div class="field"><label>Duration (ms)</label><input type="number" id="effectDuration" value="800" min="100" step="50"></div>
-                <div class="field"><label>Delay (ms)</label><input type="number" id="effectDelay" value="0" min="0" step="50"></div>
+                <div class="field">
+                    <label for="effectDuration">Duration (ms)</label>
+                    <input type="number" id="effectDuration" value="800" min="100" step="50">
+                </div>
+                <div class="field">
+                    <label for="effectDelay">Delay (ms)</label>
+                    <input type="number" id="effectDelay" value="0" min="0" step="50">
+                </div>
             </div>
             <div class="field">
                 <label>Time period</label>
                 <div class="radio-group">
-                    <label><input type="radio" name="timePeriod" value="onetime" checked> One time</label>
-                    <label><input type="radio" name="timePeriod" value="infinite"> Infinite (loop)</label>
+                    <label>
+                        <input type="radio" name="timePeriod" value="onetime" checked> One time
+                    </label>
+                    <label>
+                        <input type="radio" name="timePeriod" value="infinite"> Infinite (loop)
+                    </label>
                 </div>
             </div>
-            <div class="field"><label>Easing</label><select id="effectEasing"><option value="easeOutCubic">Smooth out</option><option value="easeOutBounce">Bouncy</option><option value="easeInOutQuad">Smooth</option><option value="linear">Linear</option></select></div>
-            <button class="apply-effect-btn" id="applyEffectBtn">🎬 Apply to selected object</button>
+            <div class="field">
+                <label for="effectEasing">Easing</label>
+                <select id="effectEasing">
+                    <option value="easeOutCubic">Smooth out</option>
+                    <option value="easeOutBounce">Bouncy</option>
+                    <option value="easeInOutQuad">Smooth</option>
+                    <option value="linear">Linear</option>
+                </select>
+            </div>
+            <button class="apply-effect-btn" id="applyEffectBtn">
+                🎬 Apply to selected object
+            </button>
         </div>
     </div>
 
-    <script>
-        (function() {
-            // ---------- GLOBALS ----------
-            let slides = [];
-            let currentSlideIndex = 0;
-            let canvas;
-            let historyStack = [], historyIndex = -1;
-            let zoomLevel = 1;
-            let historySaveTimer = null;
-            let hasUnsavedChanges = false;
-            const container = document.getElementById('fabric-canvas-container');
-            const zoomLevelDisplay = document.getElementById('zoomLevelDisplay');
-            const undoBtn = document.querySelector('[data-action="undo"]');
-            const redoBtn = document.querySelector('[data-action="redo"]');
-            const boldBtn = document.querySelector('[data-action="bold"]');
-            const italicBtn = document.querySelector('[data-action="italic"]');
-            const underlineBtn = document.querySelector('[data-action="underline"]');
-            const alignLeftBtn = document.querySelector('[data-action="alignLeft"]');
-            const alignCenterBtn = document.querySelector('[data-action="alignCenter"]');
-            const alignRightBtn = document.querySelector('[data-action="alignRight"]');
-            const fillColorBtn = document.getElementById('fillColorBtn');
-            const bgColorBtn = document.getElementById('bgColorBtn');
-
-            function markAsChanged() { hasUnsavedChanges = true; }
-            function clearUnsaved() { hasUnsavedChanges = false; }
-            function saveCurrentSlideState() { if(canvas && slides.length){ slides[currentSlideIndex].canvasJSON = JSON.stringify(canvas.toJSON(['id', 'effectDef'])); slides[currentSlideIndex].bgColor = canvas.backgroundColor; slides[currentSlideIndex].zoom = zoomLevel; } clearUnsaved(); }
-            
-            function loadSlide(index) {
-                if(index<0||index>=slides.length) return false; 
-                saveCurrentSlideState(); 
-                const slide=slides[index]; 
-                currentSlideIndex=index;
-                if(slide.canvasJSON){ 
-                    canvas.loadFromJSON(slide.canvasJSON,()=>{ 
-                        if(slide.bgColor) canvas.setBackgroundColor(slide.bgColor,()=>{}); 
-                        canvas.renderAll(); 
-                        zoomLevel=slide.zoom||1; 
-                        canvas.setZoom(zoomLevel); 
-                        updateZoomDisplay(); 
-                        resetHistoryFromCurrentCanvas(); 
-                        canvas.renderAll(); 
-                        clearUnsaved(); 
-                    }); 
-                } else { 
-                    canvas.clear(); 
-                    canvas.backgroundColor=slide.bgColor||'#2b2b2b'; 
-                    canvas.setZoom(1); 
-                    zoomLevel=1; 
-                    canvas.renderAll(); 
-                    resetHistoryFromCurrentCanvas(); 
-                }
-                renderSlideSidebar(); 
-                updateStyleButtonsState(); 
-                return true;
-            }
-            
-            function resetHistoryFromCurrentCanvas() { 
-                const state=JSON.stringify(canvas.toJSON(['id'])); 
-                historyStack=[state]; 
-                historyIndex=0; 
-                updateUndoRedoButtons(); 
-            }
-            
-            function updateUndoRedoButtons(){ 
-                if(undoBtn) undoBtn.disabled=(historyIndex<=0); 
-                if(redoBtn) redoBtn.disabled=(historyIndex>=historyStack.length-1); 
-            }
-            
-            function scheduleHistorySave() { 
-                if(historySaveTimer) clearTimeout(historySaveTimer); 
-                historySaveTimer=setTimeout(()=>{ 
-                    const state=JSON.stringify(canvas.toJSON(['id'])); 
-                    if(historyStack.length===0||historyStack[historyIndex]!==state){ 
-                        historyStack=historyStack.slice(0,historyIndex+1); 
-                        historyStack.push(state); 
-                        historyIndex++; 
-                        markAsChanged(); 
-                        updateUndoRedoButtons(); 
-                    } 
-                    saveCurrentSlideState(); 
-                },150); 
-            }
-            
-            function undo(){ if(historyIndex>0){ historyIndex--; loadHistoryState(); } }
-            function redo(){ if(historyIndex<historyStack.length-1){ historyIndex++; loadHistoryState(); } }
-            function loadHistoryState(){ canvas.loadFromJSON(historyStack[historyIndex],()=>{ canvas.renderAll(); updateUndoRedoButtons(); updateStyleButtonsState(); markAsChanged(); saveCurrentSlideState(); }); }
-            function updateZoomDisplay(){ zoomLevelDisplay.textContent=Math.round(zoomLevel*100)+'%'; }
-            function zoomIn(){ zoomLevel=Math.min(2,zoomLevel+0.1); canvas.setZoom(zoomLevel); updateZoomDisplay(); scheduleHistorySave(); }
-            function zoomOut(){ zoomLevel=Math.max(0.5,zoomLevel-0.1); canvas.setZoom(zoomLevel); updateZoomDisplay(); scheduleHistorySave(); }
-
-            function groupSelected() { const objs = canvas.getActiveObjects(); if(objs.length<2){ alert("Select at least 2 objects."); return; } canvas.getActiveObject().toGroup(); canvas.renderAll(); scheduleHistorySave(); updateStyleButtonsState(); }
-            function ungroupSelected() { const obj = canvas.getActiveObject(); if(!obj || obj.type!=='group'){ alert("Select a group."); return; } obj.toActiveSelection(); canvas.renderAll(); scheduleHistorySave(); updateStyleButtonsState(); }
-
-            // ---------- EFFECT ENGINE ----------
-            const easingMap = { easeOutCubic: fabric.util.ease.easeOutCubic, easeOutBounce: fabric.util.ease.easeOutBounce, easeInOutQuad: fabric.util.ease.easeInOutQuad, linear: fabric.util.ease.linear };
-            
-            function applyEffectToObject(obj, effect, duration, delay, easingName, isInfinite = false) {
-                if (!obj) return;
-                const easingFn = easingMap[easingName] || fabric.util.ease.easeOutCubic;
-                let completed = false;
-                
-                function runAnimation(callback) {
-                    const originalLeft = obj.left;
-                    const originalTop = obj.top;
-                    const originalScaleX = obj.scaleX;
-                    const originalScaleY = obj.scaleY;
-                    const originalAngle = obj.angle;
-                    const originalOpacity = obj.opacity !== undefined ? obj.opacity : 1;
-                    let targetProps = {};
-                    switch(effect) {
-                        case 'fadeIn': obj.set('opacity', 0); targetProps = { opacity: originalOpacity }; break;
-                        case 'slideInLeft': obj.set('left', originalLeft - 300); targetProps = { left: originalLeft }; break;
-                        case 'slideInRight': obj.set('left', originalLeft + 300); targetProps = { left: originalLeft }; break;
-                        case 'slideInUp': obj.set('top', originalTop + 200); targetProps = { top: originalTop }; break;
-                        case 'slideInDown': obj.set('top', originalTop - 200); targetProps = { top: originalTop }; break;
-                        case 'zoomIn': obj.set('scaleX', 0.1); obj.set('scaleY', 0.1); targetProps = { scaleX: originalScaleX, scaleY: originalScaleY }; break;
-                        case 'bounce': obj.set('scaleX', 0.8); obj.set('scaleY', 0.8); targetProps = { scaleX: originalScaleX, scaleY: originalScaleY }; break;
-                        case 'flipX': obj.set('scaleX', -originalScaleX); targetProps = { scaleX: originalScaleX }; break;
-                        case 'flipY': obj.set('scaleY', -originalScaleY); targetProps = { scaleY: originalScaleY }; break;
-                        case 'rotateIn': obj.set('angle', -45); targetProps = { angle: originalAngle }; break;
-                        default: if(callback) callback(); return;
-                    }
-                    canvas.renderAll();
-                    obj.animate(targetProps, {
-                        duration: duration,
-                        easing: easingFn,
-                        onChange: canvas.renderAll.bind(canvas),
-                        onComplete: () => {
-                            if(effect === 'flipX') obj.set('scaleX', originalScaleX);
-                            if(effect === 'flipY') obj.set('scaleY', originalScaleY);
-                            canvas.renderAll();
-                            if(callback) callback();
-                        }
-                    });
-                }
-                
-                function startLoop() {
-                    runAnimation(() => {
-                        if (isInfinite && !completed) {
-                            setTimeout(startLoop, delay + duration + 100);
-                        }
-                    });
-                }
-                
-                if (delay > 0) setTimeout(startLoop, delay);
-                else startLoop();
-            }
-            
-            function setObjectEffect(obj, effectData) {
-                obj.effectDef = { ...effectData };
-                applyEffectToObject(obj, effectData.type, effectData.duration, effectData.delay, effectData.easing, effectData.infinite);
-                scheduleHistorySave();
-            }
-            
-            // effect modal UI
-            const modal = document.getElementById('effectModal');
-            function showEffectModal() { modal.classList.add('active'); }
-            function closeEffectModal() { modal.classList.remove('active'); }
-            function applyEffectFromUI() {
-                const obj = canvas.getActiveObject();
-                if (!obj) { alert("Please select an object."); return; }
-                const effectType = document.getElementById('effectSelect').value;
-                const duration = parseInt(document.getElementById('effectDuration').value, 10);
-                const delay = parseInt(document.getElementById('effectDelay').value, 10);
-                const easing = document.getElementById('effectEasing').value;
-                const isInfinite = (document.querySelector('input[name="timePeriod"]:checked').value === 'infinite');
-                const effectData = { type: effectType, duration, delay, easing, infinite: isInfinite };
-                setObjectEffect(obj, effectData);
-                closeEffectModal();
-            }
-            
-            // ---------- PREVIEW MODE ----------
-            function openPreviewMode() {
-                saveCurrentSlideState();
-                const slidesData = slides.map(slide => ({
-                    name: slide.name,
-                    canvasJSON: slide.canvasJSON ? JSON.parse(slide.canvasJSON) : null,
-                    bgColor: slide.bgColor
-                }));
-                const currentIdx = currentSlideIndex;
-                const win = window.open();
-                if (!win) { alert("Popup blocked. Please allow popups."); return; }
-                win.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head><title>Presentation Preview</title>
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"><\/script>
-                    <style>
-                        body { margin:0; overflow:hidden; background:#1e1e1e; font-family:'Segoe UI',sans-serif; }
-                        .preview-container { position:relative; width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; background:#000; }
-                        canvas { box-shadow:0 0 0 1px #3c3c3c; max-width:90vw; max-height:90vh; }
-                        .nav-controls { position:fixed; bottom:20px; left:0; right:0; text-align:center; background:rgba(0,0,0,0.7); padding:10px; color:white; z-index:100; }
-                        button { background:#007acc; border:none; color:white; padding:8px 16px; margin:0 8px; border-radius:8px; cursor:pointer; font-size:16px; }
-                        .slide-counter { margin:0 16px; font-size:16px; }
-                        .instruction { position:fixed; top:10px; right:10px; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:8px; font-size:12px; }
-                    </style>
-                    </head>
-                    <body>
-                    <div class="preview-container"><canvas id="previewCanvas" width="900" height="600"></canvas></div>
-                    <div class="nav-controls"><button id="prevBtn">◀ Previous</button><span class="slide-counter" id="slideCounter">Slide 1 / 1</span><button id="nextBtn">Next ▶</button></div>
-                    <div class="instruction">← → keys | ESC to close</div>
-                    <script>
-                        const slidesData = ${JSON.stringify(slidesData)};
-                        let currentIdx = ${currentIdx};
-                        let canvas;
-                        let activeTimeouts = [];
-                        function clearEffects() { activeTimeouts.forEach(t => clearTimeout(t)); activeTimeouts = []; }
-                        function applyObjectEffect(obj, effectDef) { /* same logic as main but simplified for preview */ 
-                            if (!obj || !effectDef) return;
-                            const easingMap = { easeOutCubic: fabric.util.ease.easeOutCubic, easeOutBounce: fabric.util.ease.easeOutBounce, easeInOutQuad: fabric.util.ease.easeInOutQuad, linear: fabric.util.ease.linear };
-                            const easing = easingMap[effectDef.easing] || easingMap.easeOutCubic;
-                            const duration = effectDef.duration, delay = effectDef.delay, effect = effectDef.type, isInfinite = effectDef.infinite === true;
-                            function animateOnce(cb){
-                                const origL=obj.left, origT=obj.top, origSX=obj.scaleX, origSY=obj.scaleY, origAng=obj.angle, origOp=obj.opacity||1;
-                                let target={};
-                                if(effect==='fadeIn'){ obj.set('opacity',0); target={opacity:origOp}; }
-                                else if(effect==='slideInLeft'){ obj.set('left',origL-300); target={left:origL}; }
-                                else if(effect==='slideInRight'){ obj.set('left',origL+300); target={left:origL}; }
-                                else if(effect==='slideInUp'){ obj.set('top',origT+200); target={top:origT}; }
-                                else if(effect==='slideInDown'){ obj.set('top',origT-200); target={top:origT}; }
-                                else if(effect==='zoomIn'){ obj.set('scaleX',0.1); obj.set('scaleY',0.1); target={scaleX:origSX, scaleY:origSY}; }
-                                else if(effect==='bounce'){ obj.set('scaleX',0.8); obj.set('scaleY',0.8); target={scaleX:origSX, scaleY:origSY}; }
-                                else if(effect==='flipX'){ obj.set('scaleX',-origSX); target={scaleX:origSX}; }
-                                else if(effect==='flipY'){ obj.set('scaleY',-origSY); target={scaleY:origSY}; }
-                                else if(effect==='rotateIn'){ obj.set('angle',-45); target={angle:origAng}; }
-                                else { if(cb) cb(); return; }
-                                canvas.renderAll();
-                                obj.animate(target, { duration, easing, onChange:canvas.renderAll.bind(canvas), onComplete:()=>{ if(effect==='flipX') obj.set('scaleX',origSX); if(effect==='flipY') obj.set('scaleY',origSY); canvas.renderAll(); if(cb) cb(); } });
-                            }
-                            function startLoop(){ animateOnce(()=>{ if(isInfinite){ const t=setTimeout(startLoop, delay+duration+100); activeTimeouts.push(t); } }); }
-                            if(delay>0){ const t=setTimeout(startLoop, delay); activeTimeouts.push(t); } else startLoop();
-                        }
-                        function loadSlide(index){
-                            clearEffects(); const slide=slidesData[index];
-                            if(slide && slide.canvasJSON) canvas.loadFromJSON(slide.canvasJSON,()=>{ if(slide.bgColor) canvas.setBackgroundColor(slide.bgColor,()=>canvas.renderAll()); canvas.renderAll(); canvas.getObjects().forEach(obj=>{ if(obj.effectDef) applyObjectEffect(obj, obj.effectDef); }); });
-                            else { canvas.clear(); if(slide && slide.bgColor) canvas.setBackgroundColor(slide.bgColor,()=>canvas.renderAll()); else canvas.setBackgroundColor('#2b2b2b',()=>canvas.renderAll()); canvas.renderAll(); }
-                            document.getElementById('slideCounter').innerText = 'Slide ' + (index+1) + ' / ' + slidesData.length;
-                        }
-                        function initPreview(){ const canvasElem = document.getElementById('previewCanvas'); canvas = new fabric.Canvas('previewCanvas', { selection: false, preserveObjectStacking: true }); canvas.setWidth(900); canvas.setHeight(600); loadSlide(currentIdx); }
-                        function nextSlide(){ if(currentIdx < slidesData.length-1){ currentIdx++; loadSlide(currentIdx); } }
-                        function prevSlide(){ if(currentIdx > 0){ currentIdx--; loadSlide(currentIdx); } }
-                        document.getElementById('prevBtn').addEventListener('click', prevSlide); document.getElementById('nextBtn').addEventListener('click', nextSlide);
-                        window.addEventListener('keydown', (e) => { if(e.key === 'ArrowLeft') prevSlide(); else if(e.key === 'ArrowRight') nextSlide(); else if(e.key === 'Escape') window.close(); });
-                        initPreview();
-                    <\/script>
-                    </body>
-                    </html>
-                `);
-                win.document.close();
-            }
-            
-            // ---------- CANVAS INIT & SLIDES ----------
-            function initCanvas() {
-                const existingCanvas = document.getElementById('fabric-canvas');
-                if (existingCanvas) existingCanvas.remove();
-                const newCanvasElem = document.createElement('canvas');
-                newCanvasElem.id = 'fabric-canvas';
-                newCanvasElem.width = container.clientWidth || 900;
-                newCanvasElem.height = container.clientHeight || 600;
-                container.innerHTML = '';
-                container.appendChild(newCanvasElem);
-                canvas = new fabric.Canvas('fabric-canvas', { preserveObjectStacking: true, selection: true, backgroundColor: '#2b2b2b' });
-                canvas.setWidth(container.clientWidth);
-                canvas.setHeight(container.clientHeight);
-                canvas.renderAll();
-                canvas.on('object:added', () => scheduleHistorySave());
-                canvas.on('object:modified', () => scheduleHistorySave());
-                canvas.on('object:removed', () => scheduleHistorySave());
-                canvas.on('selection:created', () => updateStyleButtonsState());
-                canvas.on('selection:updated', () => updateStyleButtonsState());
-                canvas.on('selection:cleared', () => updateStyleButtonsState());
-            }
-            
-            // ---------- NEW: RENAME SLIDE FUNCTION ----------
-            function renameSlide(index) {
-                const currentName = slides[index].name;
-                const newName = prompt("Rename slide:", currentName);
-                if (newName && newName.trim() !== "") {
-                    slides[index].name = newName.trim();
-                    renderSlideSidebar();       // re-render sidebar to show new name
-                    markAsChanged();            // mark unsaved changes
-                    // If current slide is renamed, also ensure any extra state consistent
-                }
-            }
-            
-            function renderSlideSidebar() {
-                const div = document.getElementById('slidesList');
-                div.innerHTML = '';
-                slides.forEach((slide, idx) => {
-                    const item = document.createElement('div');
-                    item.className = `slide-item ${idx === currentSlideIndex ? 'active' : ''}`;
-                    item.innerHTML = `
-                        <div class="slide-info">
-                            <div class="slide-name">${escapeHtml(slide.name)}</div>
-                            <div class="slide-index">Slide ${idx+1}</div>
-                        </div>
-                        <div class="slide-actions">
-                            <button class="rename-slide-btn" data-rename-index="${idx}" title="Rename slide"><span class="material-icons">edit</span></button>
-                            <button class="delete-slide-btn" data-delete-index="${idx}" title="Delete slide"><span class="material-icons">delete_outline</span></button>
-                        </div>
-                    `;
-                    // Rename button event
-                    const renameBtn = item.querySelector('.rename-slide-btn');
-                    if (renameBtn) {
-                        renameBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            renameSlide(idx);
-                        });
-                    }
-                    // Delete button event
-                    const delBtn = item.querySelector('.delete-slide-btn');
-                    if (delBtn) {
-                        delBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            deleteSlide(idx);
-                        });
-                    }
-                    // Click on slide-info area loads slide
-                    const infoDiv = item.querySelector('.slide-info');
-                    if (infoDiv) {
-                        infoDiv.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            loadSlide(idx);
-                        });
-                    } else {
-                        item.addEventListener('click', (e) => {
-                            if (!e.target.closest('.slide-actions')) loadSlide(idx);
-                        });
-                    }
-                    div.appendChild(item);
-                });
-            }
-            
-            function deleteSlide(i) {
-                if(slides.length<=1){ alert("Cannot delete last slide."); return; }
-                if(confirm(`Delete "${slides[i].name}"?`)){
-                    slides.splice(i,1);
-                    if(currentSlideIndex>=slides.length) currentSlideIndex=slides.length-1;
-                    loadSlide(currentSlideIndex);
-                    renderSlideSidebar();
-                    markAsChanged();
-                }
-            }
-            
-            function addNewSlide() {
-                saveCurrentSlideState();
-                slides.push({ id: Date.now(), name: `Slide ${slides.length+1}`, canvasJSON: null, bgColor: '#2b2b2b', zoom: 1 });
-                loadSlide(slides.length-1);
-                renderSlideSidebar();
-                markAsChanged();
-            }
-            
-            function escapeHtml(s){ return s.replace(/[&<>]/g, m=>{ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
-            
-            function initSlides() {
-                slides = [{ id: 'init', name: 'Slide 1', canvasJSON: null, bgColor: '#2b2b2b', zoom: 1 }];
-                currentSlideIndex = 0;
-                initCanvas();
-                resetHistoryFromCurrentCanvas();
-                loadSlide(0);
-                renderSlideSidebar();
-            }
-            
-            // ---------- STANDARD TOOLS ----------
-            function addTextBox() { const tb = new fabric.Textbox('New Text', { left:100, top:100, width:200, fontSize:24, fill:'#fff' }); canvas.add(tb); canvas.setActiveObject(tb); canvas.renderAll(); scheduleHistorySave(); }
-            function addRectangle() { canvas.add(new fabric.Rect({ left:150, top:150, width:120, height:80, fill:'#3498db', stroke:'#fff' })); canvas.renderAll(); scheduleHistorySave(); }
-            function addCircle() { canvas.add(new fabric.Circle({ left:200, top:200, radius:50, fill:'#e67e22', stroke:'#fff' })); canvas.renderAll(); scheduleHistorySave(); }
-            function addImageFromFile() { document.getElementById('imageFileInput').click(); }
-            function addQRCode() { const t=prompt('Enter text/URL:'); if(t) fabric.Image.fromURL(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(t)}`, img=>{ img.set({ left:100, top:100 }); canvas.add(img); canvas.renderAll(); scheduleHistorySave(); }); }
-            function handleImageFileSelect(e) { const f=e.target.files[0]; if(f && f.type.startsWith('image/')){ const r=new FileReader(); r.onload=ev=>{ fabric.Image.fromURL(ev.target.result, img=>{ img.scaleToWidth(250); img.set({ left:100, top:100 }); canvas.add(img); canvas.renderAll(); scheduleHistorySave(); }); }; r.readAsDataURL(f); } e.target.value=''; }
-            function deleteSelected() { canvas.getActiveObjects().forEach(o=>canvas.remove(o)); canvas.discardActiveObject(); canvas.renderAll(); scheduleHistorySave(); }
-            function applyToSelected(cb) { canvas.getActiveObjects().forEach(cb); canvas.renderAll(); scheduleHistorySave(); updateStyleButtonsState(); }
-            function setBold() { applyToSelected(o=>{ if(o.type==='textbox') o.fontWeight = (o.fontWeight==='bold')?'normal':'bold'; }); }
-            function setItalic() { applyToSelected(o=>{ if(o.type==='textbox') o.fontStyle = (o.fontStyle==='italic')?'normal':'italic'; }); }
-            function setUnderline() { applyToSelected(o=>{ if(o.type==='textbox') o.underline = !o.underline; }); }
-            function setFontSize(s) { applyToSelected(o=>{ if(o.fontSize) o.fontSize=parseInt(s); }); }
-            function setLineHeight(h) { applyToSelected(o=>{ if(o.lineHeight) o.lineHeight=parseFloat(h); }); }
-            function setFillColor(c) { applyToSelected(o=>{ if(o.type !== 'image') o.set('fill', c); }); }
-            function setBackgroundColor(c) { applyToSelected(o=>{ if(o.type==='textbox') o.set('backgroundColor', c); }); }
-            function setTextAlign(a) { applyToSelected(o=>{ if(o.textAlign) o.textAlign = a; }); }
-            function setCanvasBgColor(c) { canvas.setBackgroundColor(c, ()=>canvas.renderAll()); scheduleHistorySave(); }
-            function bringForward() { const o=canvas.getActiveObject(); if(o) canvas.bringForward(o); canvas.renderAll(); scheduleHistorySave(); }
-            function sendBackward() { const o=canvas.getActiveObject(); if(o) canvas.sendBackwards(o); canvas.renderAll(); scheduleHistorySave(); }
-            function increaseIndent() { applyToSelected(o=>{ if(o.type==='textbox') o.text = '    ' + o.text; }); }
-            function decreaseIndent() { applyToSelected(o=>{ if(o.type==='textbox') o.text = o.text.replace(/^ {1,4}/, ''); }); }
-            function transformText(t) { applyToSelected(o=>{ if(o.type==='textbox'){ if(t==='uppercase') o.text=o.text.toUpperCase(); else if(t==='lowercase') o.text=o.text.toLowerCase(); else if(t==='capitalize') o.text=o.text.replace(/\b\w/g,c=>c.toUpperCase()); } }); }
-            function updateStyleButtonsState() { const o=canvas.getActiveObject(); if(o && o.type==='textbox'){ boldBtn.classList.toggle('active', o.fontWeight==='bold'); italicBtn.classList.toggle('active', o.fontStyle==='italic'); underlineBtn.classList.toggle('active', !!o.underline); const a=o.textAlign||'left'; alignLeftBtn.classList.toggle('active',a==='left'); alignCenterBtn.classList.toggle('active',a==='center'); alignRightBtn.classList.toggle('active',a==='right'); fillColorBtn.disabled=false; bgColorBtn.disabled=false; } else { fillColorBtn.disabled= (o && o.type==='image'); bgColorBtn.disabled=true; } }
-            function exportCurrentSlide() { saveCurrentSlideState(); const slide=slides[currentSlideIndex]; const exportObj={ version:"1.0", slideName:slide.name, canvasJSON:slide.canvasJSON?JSON.parse(slide.canvasJSON):canvas.toJSON(['id','effectDef']), bgColor:canvas.backgroundColor, zoom:zoomLevel }; const blob=new Blob([JSON.stringify(exportObj,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`slide_${slide.name.replace(/\s/g,'_')}.rept`; a.click(); URL.revokeObjectURL(blob.url); clearUnsaved(); }
-            function importReptFile(file) { if(hasUnsavedChanges && !confirm('Replace current slide?')) return; const reader=new FileReader(); reader.onload=e=>{ try{ const imported=JSON.parse(e.target.result); const jsonToLoad=imported.canvasJSON||imported; canvas.loadFromJSON(jsonToLoad,()=>{ if(imported.bgColor) canvas.setBackgroundColor(imported.bgColor,()=>{}); canvas.renderAll(); zoomLevel=imported.zoom||1; canvas.setZoom(zoomLevel); updateZoomDisplay(); resetHistoryFromCurrentCanvas(); slides[currentSlideIndex].canvasJSON=JSON.stringify(canvas.toJSON(['id','effectDef'])); slides[currentSlideIndex].bgColor=canvas.backgroundColor; slides[currentSlideIndex].zoom=zoomLevel; if(imported.slideName) slides[currentSlideIndex].name=imported.slideName; renderSlideSidebar(); saveCurrentSlideState(); clearUnsaved(); }); } catch(err){ alert('Invalid .REPT file'); } }; reader.readAsText(file); }
-            
-            // EVENT BINDINGS
-            document.getElementById('toolbar').addEventListener('click', (e) => {
-                const btn = e.target.closest('.tool-btn');
-                if (!btn || btn.closest('.dropdown-container')) return;
-                const a = btn.dataset.action;
-                if(a === 'newDoc') addNewSlide();
-                else if(a === 'undo') undo();
-                else if(a === 'redo') redo();
-                else if(a === 'deleteSelected') deleteSelected();
-                else if(a === 'addText') addTextBox();
-                else if(a === 'addImage') addImageFromFile();
-                else if(a === 'addRectangle') addRectangle();
-                else if(a === 'addCircle') addCircle();
-                else if(a === 'addQR') addQRCode();
-                else if(a === 'bold') setBold();
-                else if(a === 'italic') setItalic();
-                else if(a === 'underline') setUnderline();
-                else if(a === 'alignLeft') setTextAlign('left');
-                else if(a === 'alignCenter') setTextAlign('center');
-                else if(a === 'alignRight') setTextAlign('right');
-                else if(a === 'bringForward') bringForward();
-                else if(a === 'sendBackward') sendBackward();
-                else if(a === 'zoomIn') zoomIn();
-                else if(a === 'zoomOut') zoomOut();
-                else if(a === 'focusMode') document.body.classList.toggle('focus-mode');
-                else if(a === 'exportRept') exportCurrentSlide();
-                else if(a === 'indentInc') increaseIndent();
-                else if(a === 'indentDec') decreaseIndent();
-                else if(a === 'group') groupSelected();
-                else if(a === 'ungroup') ungroupSelected();
-            });
-            document.getElementById('imageFileInput').addEventListener('change', handleImageFileSelect);
-            document.getElementById('importJsonBtn').addEventListener('click', ()=>document.getElementById('importFileInput').click());
-            document.getElementById('importFileInput').addEventListener('change', (e)=>{ if(e.target.files[0]) importReptFile(e.target.files[0]); e.target.value=''; });
-            document.getElementById('addSlideBtn').addEventListener('click', addNewSlide);
-            document.getElementById('exitFocusBtn').addEventListener('click', ()=>document.body.classList.remove('focus-mode'));
-            document.getElementById('effectBtn').addEventListener('click', showEffectModal);
-            document.getElementById('closeEffectModal').addEventListener('click', closeEffectModal);
-            document.getElementById('applyEffectBtn').addEventListener('click', applyEffectFromUI);
-            document.getElementById('previewModeBtn').addEventListener('click', openPreviewMode);
-            document.addEventListener('keydown', (e)=>{ if(e.ctrlKey && e.key==='z'){ e.preventDefault(); undo(); } if(e.ctrlKey && e.key==='y'){ e.preventDefault(); redo(); } if(e.key==='Delete' && document.activeElement===document.body){ deleteSelected(); } if(e.key==='Escape' && document.body.classList.contains('focus-mode')) document.body.classList.remove('focus-mode'); });
-            
-            const presetColors = ['#ffffff','#000000','#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#ecf0f1','#c0392b','#2980b9','#8e44ad','#2c3e50','#16a085','#27ae60','#f39c12','#d35400'];
-            function buildPalette(gridId,customId,cb){ const grid=document.getElementById(gridId); grid.innerHTML=''; presetColors.forEach(c=>{ const swatch=document.createElement('div'); swatch.className='color-swatch'; swatch.style.backgroundColor=c; swatch.addEventListener('click',()=>{ cb(c); document.getElementById(customId).value=c; grid.closest('.color-picker-popup').classList.remove('show'); }); grid.appendChild(swatch); }); document.getElementById(customId).addEventListener('input',e=>cb(e.target.value)); }
-            buildPalette('fillColorGrid','fillColorCustom',setFillColor); buildPalette('bgColorGrid','bgColorCustom',setBackgroundColor); buildPalette('canvasBgGrid','canvasBgCustom',setCanvasBgColor);
-            function setupColorDrop(contId,pickerId){ const cont=document.getElementById(contId), picker=document.getElementById(pickerId), btn=cont.querySelector('.tool-btn'); btn.addEventListener('click',e=>{ e.stopPropagation(); document.querySelectorAll('.color-picker-popup.show').forEach(p=>p!==picker && p.classList.remove('show')); document.querySelectorAll('.dropdown-container.open').forEach(d=>d!==cont && d.classList.remove('open')); picker.classList.toggle('show'); }); picker.addEventListener('click',e=>e.stopPropagation()); }
-            setupColorDrop('fillColorContainer','fillColorPicker'); setupColorDrop('bgColorContainer','bgColorPicker'); setupColorDrop('canvasBgContainer','canvasBgPicker');
-            document.querySelectorAll('.dropdown-container:not(#fillColorContainer):not(#bgColorContainer):not(#canvasBgContainer)').forEach(cont=>{ const btn=cont.querySelector('.tool-btn'); if(btn) btn.addEventListener('click',e=>{ e.stopPropagation(); document.querySelectorAll('.color-picker-popup.show').forEach(p=>p.classList.remove('show')); cont.classList.toggle('open'); }); cont.addEventListener('click',e=>e.stopPropagation()); });
-            document.addEventListener('click',()=>{ document.querySelectorAll('.dropdown-container.open').forEach(c=>c.classList.remove('open')); document.querySelectorAll('.color-picker-popup.show').forEach(p=>p.classList.remove('show')); });
-            document.querySelectorAll('[data-fontsize]').forEach(el=>el.addEventListener('click',()=>setFontSize(el.dataset.fontsize)));
-            document.querySelectorAll('[data-lineheight]').forEach(el=>el.addEventListener('click',()=>setLineHeight(el.dataset.lineheight)));
-            document.querySelectorAll('[data-transform]').forEach(el=>el.addEventListener('click',()=>transformText(el.dataset.transform)));
-            window.addEventListener('beforeunload', (e)=>{ if(hasUnsavedChanges){ e.preventDefault(); e.returnValue='Unsaved changes'; return e.returnValue; } });
-            initSlides();
-        })();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

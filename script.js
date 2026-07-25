@@ -1,4 +1,3 @@
-
 // ===== واجهات TypeScript =====
 interface SlideData {
   id: string | number;
@@ -28,12 +27,11 @@ interface ExportedSlide {
 const ALLOWED_TAGS = new Set(['b', 'i', 'u', 'br', 'span', 'div']);
 const sanitizeHTML = (input: string): string => {
   const div = document.createElement('div');
-  div.textContent = input; // ✅ آمن: يحول كل الرموز إلى نصوص
+  div.textContent = input;
   return div.innerHTML;
 };
 
 const sanitizeSlideName = (name: string): string => {
-  // ✅ إصلاح: إزالة أي HTML أو رموز خطيرة من اسم الشريحة
   return name.replace(/[<>&"']/g, '');
 };
 
@@ -61,7 +59,6 @@ interface ReptFileSchema {
 const validateReptFile = (data: unknown): data is ReptFileSchema => {
   if (!data || typeof data !== 'object') return false;
   const obj = data as Record<string, unknown>;
-  // ✅ إصلاح: التحقق من وجود الخصائص الأساسية ومنع استيراد JSON خبيث
   if (obj.canvasJSON !== undefined && typeof obj.canvasJSON !== 'object') return false;
   if (obj.bgColor !== undefined && typeof obj.bgColor !== 'string') return false;
   if (obj.zoom !== undefined && typeof obj.zoom !== 'number') return false;
@@ -176,12 +173,14 @@ const undo = (): void => {
     loadHistoryState();
   }
 };
+
 const redo = (): void => {
   if (historyIndex < historyStack.length - 1) {
     historyIndex++;
     loadHistoryState();
   }
 };
+
 const loadHistoryState = (): void => {
   canvas.loadFromJSON(historyStack[historyIndex], () => {
     canvas.renderAll();
@@ -191,15 +190,18 @@ const loadHistoryState = (): void => {
     saveCurrentSlideState();
   });
 };
+
 const updateZoomDisplay = (): void => {
   zoomLevelDisplay.textContent = Math.round(zoomLevel * 100) + '%';
 };
+
 const zoomIn = (): void => {
   zoomLevel = Math.min(2, zoomLevel + 0.1);
   canvas.setZoom(zoomLevel);
   updateZoomDisplay();
   scheduleHistorySave();
 };
+
 const zoomOut = (): void => {
   zoomLevel = Math.max(0.5, zoomLevel - 0.1);
   canvas.setZoom(zoomLevel);
@@ -213,11 +215,15 @@ const groupSelected = (): void => {
     alert('Select at least 2 objects.');
     return;
   }
-  (canvas.getActiveObject() as fabric.Object)?.toGroup();
-  canvas.renderAll();
-  scheduleHistorySave();
-  updateStyleButtonsState();
+  const activeObj = canvas.getActiveObject();
+  if (activeObj) {
+    activeObj.toGroup();
+    canvas.renderAll();
+    scheduleHistorySave();
+    updateStyleButtonsState();
+  }
 };
+
 const ungroupSelected = (): void => {
   const obj = canvas.getActiveObject();
   if (!obj || obj.type !== 'group') {
@@ -348,17 +354,18 @@ const setObjectEffect = (obj: fabric.Object, effectData: EffectDefinition): void
 const showEffectModal = (): void => {
   modal.classList.add('active');
 };
+
 const closeEffectModal = (): void => {
   modal.classList.remove('active');
 };
+
 const applyEffectFromUI = (): void => {
   const obj = canvas.getActiveObject();
   if (!obj) {
     alert('Please select an object.');
     return;
   }
-  const effectType = (document.getElementById('effectSelect') as HTMLSelectElement)
-    .value;
+  const effectType = (document.getElementById('effectSelect') as HTMLSelectElement).value;
   const duration = parseInt(
     (document.getElementById('effectDuration') as HTMLInputElement).value,
     10
@@ -367,8 +374,7 @@ const applyEffectFromUI = (): void => {
     (document.getElementById('effectDelay') as HTMLInputElement).value,
     10
   );
-  const easing = (document.getElementById('effectEasing') as HTMLSelectElement)
-    .value;
+  const easing = (document.getElementById('effectEasing') as HTMLSelectElement).value;
   const isInfinite =
     (
       document.querySelector(
@@ -386,7 +392,7 @@ const applyEffectFromUI = (): void => {
   closeEffectModal();
 };
 
-// ===== PREVIEW MODE (آمن - بدون document.write) =====
+// ===== PREVIEW MODE =====
 const openPreviewMode = (): void => {
   saveCurrentSlideState();
   const slidesData = slides.map((slide) => ({
@@ -396,14 +402,12 @@ const openPreviewMode = (): void => {
   }));
   const currentIdx = currentSlideIndex;
 
-  // ✅ إصلاح أمني: فتح نافذة فارغة بدلاً من document.write
   const win = window.open('about:blank', '_blank');
   if (!win) {
     alert('Popup blocked. Please allow popups.');
     return;
   }
 
-  // بناء HTML بشكل آمن وإدراجه
   const previewHTML = `<!DOCTYPE html>
 <html>
 <head><title>Presentation Preview</title>
@@ -506,7 +510,6 @@ const initCanvas = (): void => {
 const renameSlide = (index: number): void => {
   const currentName = slides[index].name;
   const newName = prompt('Rename slide:', currentName);
-  // ✅ إصلاح: تعقيم الاسم الجديد قبل الحفظ
   if (newName && newName.trim() !== '') {
     slides[index].name = sanitizeSlideName(newName.trim());
     renderSlideSidebar();
@@ -514,10 +517,8 @@ const renameSlide = (index: number): void => {
   }
 };
 
-// ✅ إصلاح: renderSlideSidebar بدون innerHTML لتفادي XSS
 const renderSlideSidebar = (): void => {
   const div = document.getElementById('slidesList') as HTMLElement;
-  // تفريغ القائمة بأمان
   while (div.firstChild) {
     div.removeChild(div.firstChild);
   }
@@ -526,13 +527,12 @@ const renderSlideSidebar = (): void => {
     const item = document.createElement('div');
     item.className = `slide-item ${idx === currentSlideIndex ? 'active' : ''}`;
 
-    // slide-info
     const infoDiv = document.createElement('div');
     infoDiv.className = 'slide-info';
 
     const nameDiv = document.createElement('div');
     nameDiv.className = 'slide-name';
-    nameDiv.textContent = slide.name; // ✅ آمن: textContent يمنع XSS
+    nameDiv.textContent = slide.name;
 
     const indexDiv = document.createElement('div');
     indexDiv.className = 'slide-index';
@@ -541,7 +541,6 @@ const renderSlideSidebar = (): void => {
     infoDiv.appendChild(nameDiv);
     infoDiv.appendChild(indexDiv);
 
-    // slide-actions
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'slide-actions';
 
@@ -567,7 +566,6 @@ const renderSlideSidebar = (): void => {
     actionsDiv.appendChild(renameBtn);
     actionsDiv.appendChild(deleteBtn);
 
-    // ✅ إصلاح: استخدام addEventListener بدلاً من onclick في HTML
     infoDiv.addEventListener('click', () => loadSlide(idx));
 
     item.appendChild(infoDiv);
@@ -623,18 +621,20 @@ const initSlides = (): void => {
 
 // ===== أدوات التحرير =====
 const addTextBox = (): void => {
-  const tb = new fabric.Textbox('New Text', {
+  const tb = new fabric.Textbox('نص جديد', {
     left: 100,
     top: 100,
     width: 200,
     fontSize: 24,
-    fill: '#fff',
+    fill: '#ffffff',
+    fontFamily: 'Segoe UI'
   });
   canvas.add(tb);
   canvas.setActiveObject(tb);
   canvas.renderAll();
   scheduleHistorySave();
 };
+
 const addRectangle = (): void => {
   canvas.add(
     new fabric.Rect({
@@ -643,12 +643,14 @@ const addRectangle = (): void => {
       width: 120,
       height: 80,
       fill: '#3498db',
-      stroke: '#fff',
+      stroke: '#ffffff',
+      strokeWidth: 2,
     })
   );
   canvas.renderAll();
   scheduleHistorySave();
 };
+
 const addCircle = (): void => {
   canvas.add(
     new fabric.Circle({
@@ -656,19 +658,21 @@ const addCircle = (): void => {
       top: 200,
       radius: 50,
       fill: '#e67e22',
-      stroke: '#fff',
+      stroke: '#ffffff',
+      strokeWidth: 2,
     })
   );
   canvas.renderAll();
   scheduleHistorySave();
 };
+
 const addImageFromFile = (): void => {
   document.getElementById('imageFileInput')!.click();
 };
+
 const addQRCode = (): void => {
   const t = prompt('Enter text/URL:');
   if (t) {
-    // ✅ إصلاح: التحقق من صحة URL/نص قبل الاستخدام
     const encoded = encodeURIComponent(t.trim().slice(0, 500));
     fabric.Image.fromURL(
       `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`,
@@ -681,10 +685,10 @@ const addQRCode = (): void => {
     );
   }
 };
+
 const handleImageFileSelect = (e: Event): void => {
   const input = e.target as HTMLInputElement;
   const f = input.files?.[0];
-  // ✅ إصلاح: التحقق من نوع الملف لمنع رفع ملفات غير صورية
   if (f && f.type.startsWith('image/')) {
     const r = new FileReader();
     r.onload = (ev) => {
@@ -703,97 +707,126 @@ const handleImageFileSelect = (e: Event): void => {
   }
   input.value = '';
 };
+
 const deleteSelected = (): void => {
   canvas.getActiveObjects().forEach((o) => canvas.remove(o));
   canvas.discardActiveObject();
   canvas.renderAll();
   scheduleHistorySave();
 };
+
 const applyToSelected = (cb: (o: fabric.Object) => void): void => {
   canvas.getActiveObjects().forEach(cb);
   canvas.renderAll();
   scheduleHistorySave();
   updateStyleButtonsState();
 };
+
 const setBold = (): void => {
   applyToSelected((o) => {
-    if (o.type === 'textbox')
-      (o as fabric.Textbox).fontWeight =
-        (o as fabric.Textbox).fontWeight === 'bold' ? 'normal' : 'bold';
+    if (o.type === 'textbox' || o.type === 'i-text') {
+      const textObj = o as fabric.Textbox;
+      textObj.fontWeight = textObj.fontWeight === 'bold' ? 'normal' : 'bold';
+    }
   });
 };
+
 const setItalic = (): void => {
   applyToSelected((o) => {
-    if (o.type === 'textbox')
-      (o as fabric.Textbox).fontStyle =
-        (o as fabric.Textbox).fontStyle === 'italic' ? 'normal' : 'italic';
+    if (o.type === 'textbox' || o.type === 'i-text') {
+      const textObj = o as fabric.Textbox;
+      textObj.fontStyle = textObj.fontStyle === 'italic' ? 'normal' : 'italic';
+    }
   });
 };
+
 const setUnderline = (): void => {
   applyToSelected((o) => {
-    if (o.type === 'textbox')
-      (o as fabric.Textbox).underline = !(o as fabric.Textbox).underline;
+    if (o.type === 'textbox' || o.type === 'i-text') {
+      const textObj = o as fabric.Textbox;
+      textObj.underline = !textObj.underline;
+    }
   });
 };
+
 const setFontSize = (s: string): void => {
   applyToSelected((o) => {
-    if ((o as any).fontSize) (o as any).fontSize = parseInt(s);
+    if ((o as any).fontSize) {
+      (o as any).fontSize = parseInt(s);
+    }
   });
 };
+
 const setLineHeight = (h: string): void => {
   applyToSelected((o) => {
-    if ((o as any).lineHeight) (o as any).lineHeight = parseFloat(h);
+    if ((o as any).lineHeight) {
+      (o as any).lineHeight = parseFloat(h);
+    }
   });
 };
+
 const setFillColor = (c: string): void => {
   applyToSelected((o) => {
-    if (o.type !== 'image') o.set('fill', c);
+    if (o.type !== 'image') {
+      o.set('fill', c);
+    }
   });
 };
+
 const setBackgroundColor = (c: string): void => {
   applyToSelected((o) => {
-    if (o.type === 'textbox') (o as fabric.Textbox).set('backgroundColor', c);
+    if (o.type === 'textbox' || o.type === 'i-text') {
+      (o as fabric.Textbox).set('backgroundColor', c);
+    }
   });
 };
+
 const setTextAlign = (a: string): void => {
   applyToSelected((o) => {
-    if ((o as any).textAlign) (o as any).textAlign = a;
+    if ((o as any).textAlign) {
+      (o as any).textAlign = a;
+    }
   });
 };
+
 const setCanvasBgColor = (c: string): void => {
   canvas.setBackgroundColor(c, () => canvas.renderAll());
   scheduleHistorySave();
 };
+
 const bringForward = (): void => {
   const o = canvas.getActiveObject();
   if (o) canvas.bringForward(o);
   canvas.renderAll();
   scheduleHistorySave();
 };
+
 const sendBackward = (): void => {
   const o = canvas.getActiveObject();
   if (o) canvas.sendBackwards(o);
   canvas.renderAll();
   scheduleHistorySave();
 };
+
 const increaseIndent = (): void => {
   applyToSelected((o) => {
-    if (o.type === 'textbox')
+    if (o.type === 'textbox' || o.type === 'i-text') {
       (o as fabric.Textbox).text = '    ' + (o as fabric.Textbox).text;
+    }
   });
 };
+
 const decreaseIndent = (): void => {
   applyToSelected((o) => {
-    if (o.type === 'textbox')
-      (o as fabric.Textbox).text = (o as fabric.Textbox).text.replace(
-        /^ {1,4}/,
-        ''
-      );
+    if (o.type === 'textbox' || o.type === 'i-text') {
+      (o as fabric.Textbox).text = (o as fabric.Textbox).text.replace(/^ {1,4}/, '');
+    }
   });
 };
+
 const transformText = (t: string): void => {
   applyToSelected((o) => {
-    if (o.type === 'textbox') {
+    if (o.type === 'textbox' || o.type === 'i-text') {
       const tb = o as fabric.Textbox;
       if (t === 'uppercase') tb.text = tb.text.toUpperCase();
       else if (t === 'lowercase') tb.text = tb.text.toLowerCase();
@@ -802,22 +835,70 @@ const transformText = (t: string): void => {
     }
   });
 };
+
+// ===== تحديث حالة أزرار التنسيق =====
 const updateStyleButtonsState = (): void => {
   const o = canvas.getActiveObject();
-  if (o && o.type === 'textbox') {
-    const tb = o as fabric.Textbox;
-    boldBtn.classList.toggle('active', tb.fontWeight === 'bold');
-    italicBtn.classList.toggle('active', tb.fontStyle === 'italic');
-    underlineBtn.classList.toggle('active', !!tb.underline);
-    const a = tb.textAlign || 'left';
-    alignLeftBtn.classList.toggle('active', a === 'left');
-    alignCenterBtn.classList.toggle('active', a === 'center');
-    alignRightBtn.classList.toggle('active', a === 'right');
-    fillColorBtn.disabled = false;
-    bgColorBtn.disabled = false;
-  } else {
-    fillColorBtn.disabled = o ? o.type === 'image' : false;
-    bgColorBtn.disabled = true;
+  
+  // تفعيل/تعطيل الأزرار حسب نوع الكائن المحدد
+  const isText = o && (o.type === 'textbox' || o.type === 'i-text');
+  const isShape = o && (o.type === 'rect' || o.type === 'circle' || o.type === 'triangle');
+  
+  // أزرار التنسيق النصي (تعمل فقط مع النصوص)
+  if (boldBtn) {
+    boldBtn.disabled = !isText;
+    if (isText) {
+      const tb = o as fabric.Textbox;
+      boldBtn.classList.toggle('active', tb.fontWeight === 'bold');
+    } else {
+      boldBtn.classList.remove('active');
+    }
+  }
+  
+  if (italicBtn) {
+    italicBtn.disabled = !isText;
+    if (isText) {
+      const tb = o as fabric.Textbox;
+      italicBtn.classList.toggle('active', tb.fontStyle === 'italic');
+    } else {
+      italicBtn.classList.remove('active');
+    }
+  }
+  
+  if (underlineBtn) {
+    underlineBtn.disabled = !isText;
+    if (isText) {
+      const tb = o as fabric.Textbox;
+      underlineBtn.classList.toggle('active', !!tb.underline);
+    } else {
+      underlineBtn.classList.remove('active');
+    }
+  }
+  
+  // أزرار المحاذاة
+  if (alignLeftBtn) {
+    alignLeftBtn.disabled = !isText;
+    if (isText) {
+      const tb = o as fabric.Textbox;
+      const a = tb.textAlign || 'left';
+      alignLeftBtn.classList.toggle('active', a === 'left');
+      alignCenterBtn.classList.toggle('active', a === 'center');
+      alignRightBtn.classList.toggle('active', a === 'right');
+    } else {
+      alignLeftBtn.classList.remove('active');
+      alignCenterBtn.classList.remove('active');
+      alignRightBtn.classList.remove('active');
+    }
+  }
+  
+  // زر لون التعبئة (يعمل مع النصوص والأشكال)
+  if (fillColorBtn) {
+    fillColorBtn.disabled = !o || o.type === 'image';
+  }
+  
+  // زر لون الخلفية (يعمل فقط مع النصوص)
+  if (bgColorBtn) {
+    bgColorBtn.disabled = !isText;
   }
 };
 
@@ -850,7 +931,6 @@ const importReptFile = (file: File): void => {
     try {
       const result = e.target?.result as string;
       const imported = JSON.parse(result);
-      // ✅ إصلاح أمني: التحقق من صحة هيكل الملف المستورد
       if (!validateReptFile(imported)) {
         alert('Invalid .REPT file structure.');
         return;
@@ -868,7 +948,6 @@ const importReptFile = (file: File): void => {
         );
         slides[currentSlideIndex].bgColor = canvas.backgroundColor as string;
         slides[currentSlideIndex].zoom = zoomLevel;
-        // ✅ إصلاح: تعقيم اسم الشريحة المستورد
         if (imported.slideName)
           slides[currentSlideIndex].name = sanitizeSlideName(imported.slideName);
         renderSlideSidebar();
@@ -882,193 +961,270 @@ const importReptFile = (file: File): void => {
   reader.readAsText(file);
 };
 
-// ===== ربط الأحداث =====
-document.getElementById('toolbar')!.addEventListener('click', (e) => {
-  const btn = (e.target as HTMLElement).closest('.tool-btn') as HTMLButtonElement;
-  if (!btn || btn.closest('.dropdown-container')) return;
-  const a = btn.dataset.action;
-  if (a === 'newDoc') addNewSlide();
-  else if (a === 'undo') undo();
-  else if (a === 'redo') redo();
-  else if (a === 'deleteSelected') deleteSelected();
-  else if (a === 'addText') addTextBox();
-  else if (a === 'addImage') addImageFromFile();
-  else if (a === 'addRectangle') addRectangle();
-  else if (a === 'addCircle') addCircle();
-  else if (a === 'addQR') addQRCode();
-  else if (a === 'bold') setBold();
-  else if (a === 'italic') setItalic();
-  else if (a === 'underline') setUnderline();
-  else if (a === 'alignLeft') setTextAlign('left');
-  else if (a === 'alignCenter') setTextAlign('center');
-  else if (a === 'alignRight') setTextAlign('right');
-  else if (a === 'bringForward') bringForward();
-  else if (a === 'sendBackward') sendBackward();
-  else if (a === 'zoomIn') zoomIn();
-  else if (a === 'zoomOut') zoomOut();
-  else if (a === 'focusMode') document.body.classList.toggle('focus-mode');
-  else if (a === 'exportRept') exportCurrentSlide();
-  else if (a === 'indentInc') increaseIndent();
-  else if (a === 'indentDec') decreaseIndent();
-  else if (a === 'group') groupSelected();
-  else if (a === 'ungroup') ungroupSelected();
-});
-
-document.getElementById('imageFileInput')!.addEventListener('change', handleImageFileSelect);
-document.getElementById('importJsonBtn')!.addEventListener('click', () =>
-  document.getElementById('importFileInput')!.click()
-);
-document.getElementById('importFileInput')!.addEventListener('change', (e) => {
-  const input = e.target as HTMLInputElement;
-  if (input.files?.[0]) importReptFile(input.files[0]);
-  input.value = '';
-});
-document.getElementById('addSlideBtn')!.addEventListener('click', addNewSlide);
-document.getElementById('exitFocusBtn')!.addEventListener('click', () =>
-  document.body.classList.remove('focus-mode')
-);
-document.getElementById('effectBtn')!.addEventListener('click', showEffectModal);
-document.getElementById('closeEffectModal')!.addEventListener('click', closeEffectModal);
-document.getElementById('applyEffectBtn')!.addEventListener('click', applyEffectFromUI);
-document.getElementById('previewModeBtn')!.addEventListener('click', openPreviewMode);
-
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key === 'z') {
-    e.preventDefault();
-    undo();
-  }
-  if (e.ctrlKey && e.key === 'y') {
-    e.preventDefault();
-    redo();
-  }
-  if (e.key === 'Delete' && document.activeElement === document.body) {
-    deleteSelected();
-  }
-  if (e.key === 'Escape' && document.body.classList.contains('focus-mode'))
-    document.body.classList.remove('focus-mode');
-});
-
-// ===== لوحة الألوان =====
-const presetColors: string[] = [
-  '#ffffff',
-  '#000000',
-  '#e74c3c',
-  '#e67e22',
-  '#f1c40f',
-  '#2ecc71',
-  '#1abc9c',
-  '#3498db',
-  '#9b59b6',
-  '#ecf0f1',
-  '#c0392b',
-  '#2980b9',
-  '#8e44ad',
-  '#2c3e50',
-  '#16a085',
-  '#27ae60',
-  '#f39c12',
-  '#d35400',
-];
-
-const buildPalette = (
-  gridId: string,
-  customId: string,
-  cb: (c: string) => void
-): void => {
-  const grid = document.getElementById(gridId) as HTMLElement;
-  grid.innerHTML = '';
-  presetColors.forEach((c) => {
-    const swatch = document.createElement('div');
-    swatch.className = 'color-swatch';
-    swatch.style.backgroundColor = c;
-    swatch.addEventListener('click', () => {
-      cb(c);
-      (document.getElementById(customId) as HTMLInputElement).value = c;
-      grid
-        .closest('.color-picker-popup')!
-        .classList.remove('show');
+// ===== ربط الأحداث (المُحسَّن) =====
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 ReStudio initialized!');
+  
+  // ===== ربط جميع الأزرار =====
+  document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const action = this.dataset.action;
+      console.log('🔘 Button clicked:', action || 'no-action');
+      
+      if (!action) return;
+      
+      // تنفيذ الإجراءات
+      switch(action) {
+        case 'newDoc':
+          addNewSlide();
+          break;
+        case 'undo':
+          undo();
+          break;
+        case 'redo':
+          redo();
+          break;
+        case 'deleteSelected':
+          deleteSelected();
+          break;
+        case 'addText':
+          addTextBox();
+          break;
+        case 'addImage':
+          addImageFromFile();
+          break;
+        case 'addRectangle':
+          addRectangle();
+          break;
+        case 'addCircle':
+          addCircle();
+          break;
+        case 'addQR':
+          addQRCode();
+          break;
+        case 'bold':
+          setBold();
+          break;
+        case 'italic':
+          setItalic();
+          break;
+        case 'underline':
+          setUnderline();
+          break;
+        case 'alignLeft':
+          setTextAlign('left');
+          break;
+        case 'alignCenter':
+          setTextAlign('center');
+          break;
+        case 'alignRight':
+          setTextAlign('right');
+          break;
+        case 'bringForward':
+          bringForward();
+          break;
+        case 'sendBackward':
+          sendBackward();
+          break;
+        case 'zoomIn':
+          zoomIn();
+          break;
+        case 'zoomOut':
+          zoomOut();
+          break;
+        case 'focusMode':
+          document.body.classList.toggle('focus-mode');
+          break;
+        case 'exportRept':
+          exportCurrentSlide();
+          break;
+        case 'indentInc':
+          increaseIndent();
+          break;
+        case 'indentDec':
+          decreaseIndent();
+          break;
+        case 'group':
+          groupSelected();
+          break;
+        case 'ungroup':
+          ungroupSelected();
+          break;
+        default:
+          console.log('⚠️ Unknown action:', action);
+      }
     });
-    grid.appendChild(swatch);
   });
-  document.getElementById(customId)!.addEventListener('input', (e) =>
-    cb((e.target as HTMLInputElement).value)
+
+  // ===== ربط أزرار خاصة =====
+  document.getElementById('imageFileInput')?.addEventListener('change', handleImageFileSelect);
+  
+  document.getElementById('importJsonBtn')?.addEventListener('click', () =>
+    document.getElementById('importFileInput')?.click()
   );
-};
-
-buildPalette('fillColorGrid', 'fillColorCustom', setFillColor);
-buildPalette('bgColorGrid', 'bgColorCustom', setBackgroundColor);
-buildPalette('canvasBgGrid', 'canvasBgCustom', setCanvasBgColor);
-
-const setupColorDrop = (contId: string, pickerId: string): void => {
-  const cont = document.getElementById(contId) as HTMLElement;
-  const picker = document.getElementById(pickerId) as HTMLElement;
-  const btn = cont.querySelector('.tool-btn') as HTMLButtonElement;
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    document
-      .querySelectorAll('.color-picker-popup.show')
-      .forEach((p) => p !== picker && p.classList.remove('show'));
-    document
-      .querySelectorAll('.dropdown-container.open')
-      .forEach((d) => d !== cont && d.classList.remove('open'));
-    picker.classList.toggle('show');
+  
+  document.getElementById('importFileInput')?.addEventListener('change', (e) => {
+    const input = e.target as HTMLInputElement;
+    if (input.files?.[0]) importReptFile(input.files[0]);
+    input.value = '';
   });
-  picker.addEventListener('click', (e) => e.stopPropagation());
-};
+  
+  document.getElementById('addSlideBtn')?.addEventListener('click', addNewSlide);
+  
+  document.getElementById('exitFocusBtn')?.addEventListener('click', () =>
+    document.body.classList.remove('focus-mode')
+  );
+  
+  document.getElementById('effectBtn')?.addEventListener('click', showEffectModal);
+  
+  document.getElementById('closeEffectModal')?.addEventListener('click', closeEffectModal);
+  
+  document.getElementById('applyEffectBtn')?.addEventListener('click', applyEffectFromUI);
+  
+  document.getElementById('previewModeBtn')?.addEventListener('click', openPreviewMode);
 
-setupColorDrop('fillColorContainer', 'fillColorPicker');
-setupColorDrop('bgColorContainer', 'bgColorPicker');
-setupColorDrop('canvasBgContainer', 'canvasBgPicker');
+  // ===== اختصارات لوحة المفاتيح =====
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'z') {
+      e.preventDefault();
+      undo();
+    }
+    if (e.ctrlKey && e.key === 'y') {
+      e.preventDefault();
+      redo();
+    }
+    if (e.key === 'Delete' && document.activeElement === document.body) {
+      deleteSelected();
+    }
+    if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
+      document.body.classList.remove('focus-mode');
+    }
+  });
 
-document
-  .querySelectorAll(
-    '.dropdown-container:not(#fillColorContainer):not(#bgColorContainer):not(#canvasBgContainer)'
-  )
-  .forEach((cont) => {
-    const btn = cont.querySelector('.tool-btn');
-    if (btn)
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        document
-          .querySelectorAll('.color-picker-popup.show')
-          .forEach((p) => p.classList.remove('show'));
-        cont.classList.toggle('open');
+  // ===== إغلاق القوائم عند النقر خارجها =====
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown-container.open').forEach(c => c.classList.remove('open'));
+    document.querySelectorAll('.color-picker-popup.show').forEach(p => p.classList.remove('show'));
+  });
+
+  // ===== منع إغلاق القوائم عند النقر داخلها =====
+  document.querySelectorAll('.dropdown-container, .color-picker-popup').forEach(el => {
+    el.addEventListener('click', (e) => e.stopPropagation());
+  });
+
+  // ===== فتح/إغلاق القوائم المنسدلة =====
+  document.querySelectorAll('.dropdown-container .tool-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const container = this.closest('.dropdown-container');
+      if (container) {
+        container.classList.toggle('open');
+        // إغلاق القوائم الأخرى
+        document.querySelectorAll('.dropdown-container.open').forEach(c => {
+          if (c !== container) c.classList.remove('open');
+        });
+      }
+    });
+  });
+
+  // ===== ألوان القوائم =====
+  const presetColors: string[] = [
+    '#ffffff', '#000000', '#e74c3c', '#e67e22', '#f1c40f', 
+    '#2ecc71', '#1abc9c', '#3498db', '#9b59b6', '#ecf0f1',
+    '#c0392b', '#2980b9', '#8e44ad', '#2c3e50', '#16a085',
+    '#27ae60', '#f39c12', '#d35400', '#7f8c8d', '#95a5a6'
+  ];
+
+  const buildPalette = (
+    gridId: string,
+    customId: string,
+    cb: (c: string) => void
+  ): void => {
+    const grid = document.getElementById(gridId) as HTMLElement;
+    if (!grid) return;
+    grid.innerHTML = '';
+    presetColors.forEach((c) => {
+      const swatch = document.createElement('div');
+      swatch.className = 'color-swatch';
+      swatch.style.backgroundColor = c;
+      swatch.addEventListener('click', () => {
+        cb(c);
+        const customInput = document.getElementById(customId) as HTMLInputElement;
+        if (customInput) customInput.value = c;
+        const popup = grid.closest('.color-picker-popup');
+        if (popup) popup.classList.remove('show');
       });
-    cont.addEventListener('click', (e) => e.stopPropagation());
+      grid.appendChild(swatch);
+    });
+    const customInput = document.getElementById(customId) as HTMLInputElement;
+    if (customInput) {
+      customInput.addEventListener('input', (e) =>
+        cb((e.target as HTMLInputElement).value)
+      );
+    }
+  };
+
+  buildPalette('fillColorGrid', 'fillColorCustom', setFillColor);
+  buildPalette('bgColorGrid', 'bgColorCustom', setBackgroundColor);
+  buildPalette('canvasBgGrid', 'canvasBgCustom', setCanvasBgColor);
+
+  // ===== فتح/إغلاق لوحات الألوان =====
+  document.querySelectorAll('.color-picker-popup').forEach(picker => {
+    const btn = picker.closest('.dropdown-container')?.querySelector('.tool-btn');
+    if (btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const pickerEl = this.closest('.dropdown-container')?.querySelector('.color-picker-popup');
+        if (pickerEl) {
+          pickerEl.classList.toggle('show');
+          // إغلاق اللوحات الأخرى
+          document.querySelectorAll('.color-picker-popup.show').forEach(p => {
+            if (p !== pickerEl) p.classList.remove('show');
+          });
+        }
+      });
+    }
   });
 
-document.addEventListener('click', () => {
-  document
-    .querySelectorAll('.dropdown-container.open')
-    .forEach((c) => c.classList.remove('open'));
-  document
-    .querySelectorAll('.color-picker-popup.show')
-    .forEach((p) => p.classList.remove('show'));
+  // ===== أحداث القوائم المنسدلة =====
+  document.querySelectorAll('[data-fontsize]').forEach((el) =>
+    el.addEventListener('click', () => {
+      const size = (el as HTMLElement).dataset.fontsize;
+      if (size) setFontSize(size);
+      // إغلاق القائمة بعد الاختيار
+      const container = el.closest('.dropdown-container');
+      if (container) container.classList.remove('open');
+    })
+  );
+
+  document.querySelectorAll('[data-lineheight]').forEach((el) =>
+    el.addEventListener('click', () => {
+      const height = (el as HTMLElement).dataset.lineheight;
+      if (height) setLineHeight(height);
+      const container = el.closest('.dropdown-container');
+      if (container) container.classList.remove('open');
+    })
+  );
+
+  document.querySelectorAll('[data-transform]').forEach((el) =>
+    el.addEventListener('click', () => {
+      const transform = (el as HTMLElement).dataset.transform;
+      if (transform) transformText(transform);
+      const container = el.closest('.dropdown-container');
+      if (container) container.classList.remove('open');
+    })
+  );
+
+  // ===== تحذير قبل المغادرة =====
+  window.addEventListener('beforeunload', (e) => {
+    if (hasUnsavedChanges) {
+      e.preventDefault();
+      e.returnValue = 'Unsaved changes';
+      return e.returnValue;
+    }
+  });
+
+  // ===== تهيئة التطبيق =====
+  initSlides();
+
 });
-
-document.querySelectorAll('[data-fontsize]').forEach((el) =>
-  el.addEventListener('click', () =>
-    setFontSize((el as HTMLElement).dataset.fontsize!)
-  )
-);
-document.querySelectorAll('[data-lineheight]').forEach((el) =>
-  el.addEventListener('click', () =>
-    setLineHeight((el as HTMLElement).dataset.lineheight!)
-  )
-);
-document.querySelectorAll('[data-transform]').forEach((el) =>
-  el.addEventListener('click', () =>
-    transformText((el as HTMLElement).dataset.transform!)
-  )
-);
-
-// ✅ إصلاح: تحذير قبل المغادرة مع حفظ التغييرات
-window.addEventListener('beforeunload', (e) => {
-  if (hasUnsavedChanges) {
-    e.preventDefault();
-    e.returnValue = 'Unsaved changes';
-    return e.returnValue;
-  }
-});
-
-initSlides();

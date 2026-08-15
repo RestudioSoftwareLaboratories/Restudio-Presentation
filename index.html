@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <!-- CSP - Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
-        font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net;
-        img-src 'self' data: https: blob:;
-        connect-src 'self' https:;
-        frame-src 'self' https:;
-        object-src 'none';
-    ">
     <title>Restudio Presentation</title>
     <link rel="icon" href="https://i.postimg.cc/66MLbbg8/restudio-profile.png" type="image/png">
+    
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+        style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+        font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:;
+        img-src 'self' https://i.postimg.cc https://api.qrserver.com data:;
+        connect-src 'self' https://api.qrserver.com;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap" rel="stylesheet">
-    <!-- Tabler Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
 </head>
@@ -30,7 +34,7 @@
             <img class="logo" src="https://i.postimg.cc/s2j0rzBZ/swrh-restudio.png" alt="ReStudio Logo">
             <span class="brand-text">Presentation</span>
         </div>
-        <button class="exit-focus-btn" id="exitFocusBtn"><i class="ti ti-minimize"></i> Exit</button>
+        <button class="exit-focus-btn" id="exitFocusBtn"><i class="ti ti-arrows-minimize"></i> Exit</button>
     </header>
 
     <div class="toolbar" id="toolbar">
@@ -43,7 +47,7 @@
             <button class="tool-btn" data-action="deleteSelected"><i class="ti ti-trash"></i> Delete</button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="addText"><i class="ti ti-typography"></i> Text</button>
+            <button class="tool-btn" data-action="addText"><i class="ti ti-text-size"></i> Text</button>
             <button class="tool-btn" data-action="addImage"><i class="ti ti-photo"></i> Image</button>
             <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
             <button class="tool-btn" data-action="addRectangle"><i class="ti ti-square"></i> Rectangle</button>
@@ -55,13 +59,13 @@
             <button class="tool-btn" data-action="italic"><i class="ti ti-italic"></i></button>
             <button class="tool-btn" data-action="underline"><i class="ti ti-underline"></i></button>
             <div class="dropdown-container" id="fontSizeContainer">
-                <button class="tool-btn"><i class="ti ti-text-size"></i> Size</button>
+                <button class="tool-btn"><i class="ti ti-font-size"></i> Size</button>
                 <div class="dropdown-content" id="fontSizeMenu">
-                    <div class="dropdown-item" data-fontsize="12">12px <span class="check-icon ti ti-check" style="display:none;"></span></div>
-                    <div class="dropdown-item" data-fontsize="18">18px <span class="check-icon ti ti-check" style="display:none;"></span></div>
-                    <div class="dropdown-item" data-fontsize="24">24px <span class="check-icon ti ti-check" style="display:none;"></span></div>
-                    <div class="dropdown-item" data-fontsize="32">32px <span class="check-icon ti ti-check" style="display:none;"></span></div>
-                    <div class="dropdown-item" data-fontsize="48">48px <span class="check-icon ti ti-check" style="display:none;"></span></div>
+                    <div class="dropdown-item" data-fontsize="12">12px <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="18">18px <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="24">24px <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="32">32px <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="48">48px <i class="ti ti-check check-icon" style="display:none;"></i></div>
                 </div>
             </div>
             <button class="tool-btn" data-action="indentInc"><i class="ti ti-indent-increase"></i></button>
@@ -69,11 +73,11 @@
             <div class="dropdown-container" id="lineHeightContainer">
                 <button class="tool-btn"><i class="ti ti-line-height"></i> Line H</button>
                 <div class="dropdown-content" id="lineHeightMenu">
-                    <div class="dropdown-item" data-lineheight="1">1.0 <span class="check-icon ti ti-check" style="display:none;"></span></div>
-                    <div class="dropdown-item" data-lineheight="1.5">1.5 <span class="check-icon ti ti-check" style="display:none;"></span></div>
-                    <div class="dropdown-item" data-lineheight="2">2.0 <span class="check-icon ti ti-check" style="display:none;"></span></div>
-                    <div class="dropdown-item" data-lineheight="2.5">2.5 <span class="check-icon ti ti-check" style="display:none;"></span></div>
-                    <div class="dropdown-item" data-lineheight="3">3.0 <span class="check-icon ti ti-check" style="display:none;"></span></div>
+                    <div class="dropdown-item" data-lineheight="1">1.0 <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="1.5">1.5 <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="2">2.0 <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="2.5">2.5 <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="3">3.0 <i class="ti ti-check check-icon" style="display:none;"></i></div>
                 </div>
             </div>
             <div class="dropdown-container" id="textTransformContainer">
@@ -87,21 +91,21 @@
         </div>
         <div class="tool-group">
             <div class="dropdown-container" id="fillColorContainer">
-                <button class="tool-btn" id="fillColorBtn"><i class="ti ti-color-picker"></i> Fill</button>
+                <button class="tool-btn" id="fillColorBtn"><i class="ti ti-color-swatch"></i> Fill</button>
                 <div class="color-picker-popup" id="fillColorPicker">
                     <div class="color-picker-grid" id="fillColorGrid"></div>
                     <input type="color" class="color-picker-input" id="fillColorCustom" value="#ffffff">
                 </div>
             </div>
             <div class="dropdown-container" id="bgColorContainer">
-                <button class="tool-btn" id="bgColorBtn"><i class="ti ti-palette"></i> BG</button>
+                <button class="tool-btn" id="bgColorBtn"><i class="ti ti-color-fill"></i> BG</button>
                 <div class="color-picker-popup" id="bgColorPicker">
                     <div class="color-picker-grid" id="bgColorGrid"></div>
                     <input type="color" class="color-picker-input" id="bgColorCustom" value="#3498db">
                 </div>
             </div>
             <div class="dropdown-container" id="canvasBgContainer">
-                <button class="tool-btn"><i class="ti ti-brush"></i> Page BG</button>
+                <button class="tool-btn"><i class="ti ti-palette"></i> Page BG</button>
                 <div class="color-picker-popup" id="canvasBgPicker">
                     <div class="color-picker-grid" id="canvasBgGrid"></div>
                     <input type="color" class="color-picker-input" id="canvasBgCustom" value="#2b2b2b">
@@ -129,7 +133,7 @@
         <div class="tool-group">
             <button class="tool-btn" data-action="exportRept"><i class="ti ti-download"></i> Export REPT</button>
             <button class="tool-btn" id="importJsonBtn"><i class="ti ti-upload"></i> Import REPT</button>
-            <button class="tool-btn" id="previewModeBtn"><i class="ti ti-presentation"></i> Preview Mode</button>
+            <button class="tool-btn" id="previewModeBtn"><i class="ti ti-slideshow"></i> Preview Mode</button>
             <input type="file" id="importFileInput" accept=".rept,.restudio,.json" style="display:none;">
         </div>
     </div>

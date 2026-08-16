@@ -777,6 +777,7 @@ function getActiveObjectsSafe(canvasInstance) {
         win.document.write('<head>\n');
         win.document.write('<meta charset="UTF-8">\n');
         win.document.write('<title>Presentation Preview</title>\n');
+        // استخدام CDN بديل لتحسين فرص التحميل
         win.document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"><\/script>\n');
         win.document.write('<style>\n');
         win.document.write('body{margin:0;overflow:hidden;background:#1e1e1e;font-family:"Segoe UI",sans-serif;}\n');
@@ -794,7 +795,7 @@ function getActiveObjectsSafe(canvasInstance) {
         win.document.write('<div class="nav-controls"><button id="prevBtn">◀ Previous</button><span class="slide-counter" id="slideCounter">Slide 1 / 1</span><button id="nextBtn">Next ▶</button></div>\n');
         win.document.write('<div class="instruction">← → keys | ESC to close</div>\n');
 
-        // كتابة السكربت الرئيسي مع معالجة الأخطاء
+        // كتابة السكربت الرئيسي مع معالجة الأخطاء ومنطق انتظار Fabric.js
         win.document.write('<script>\n');
         win.document.write('(function() {\n');
         win.document.write('  "use strict";\n');
@@ -884,8 +885,9 @@ function getActiveObjectsSafe(canvasInstance) {
         win.document.write('      try {\n');
         win.document.write('        if (slide && slide.canvasJSON) {\n');
         win.document.write('          canvas.loadFromJSON(slide.canvasJSON, function() {\n');
-        win.document.write('            if (slide.bgColor) canvas.setBackgroundColor(slide.bgColor, function() { canvas.renderAll(); });\n');
-        win.document.write('            canvas.renderAll();\n');
+        // تحسين الخلفية: تعيين الخلفية أولاً ثم renderAll
+        win.document.write('            var bgColor = slide.bgColor || "#2b2b2b";\n');
+        win.document.write('            canvas.setBackgroundColor(bgColor, function() { canvas.renderAll(); });\n');
         win.document.write('            var objs = canvas.getObjects();\n');
         win.document.write('            for (var i = 0; i < objs.length; i++) {\n');
         win.document.write('              if (objs[i].effectDef) {\n');
@@ -897,7 +899,6 @@ function getActiveObjectsSafe(canvasInstance) {
         win.document.write('          canvas.clear();\n');
         win.document.write('          var bg = (slide && slide.bgColor) ? slide.bgColor : "#2b2b2b";\n');
         win.document.write('          canvas.setBackgroundColor(bg, function() { canvas.renderAll(); });\n');
-        win.document.write('          canvas.renderAll();\n');
         win.document.write('        }\n');
         win.document.write('      } catch (err) {\n');
         win.document.write('        console.error("Error loading slide:", err);\n');
@@ -919,6 +920,8 @@ function getActiveObjectsSafe(canvasInstance) {
         win.document.write('        });\n');
         win.document.write('        canvas.setWidth(900);\n');
         win.document.write('        canvas.setHeight(600);\n');
+        // تعيين خلفية افتراضية فور إنشاء الكانفاس لتجنب الشاشة السوداء
+        win.document.write('        canvas.setBackgroundColor("#2b2b2b", function() { canvas.renderAll(); });\n');
         win.document.write('        isInitialized = true;\n');
         win.document.write('        loadSlide(currentIdx);\n');
         win.document.write('        console.log("Preview initialized successfully");\n');
@@ -949,29 +952,34 @@ function getActiveObjectsSafe(canvasInstance) {
         win.document.write('      else if (e.key === "Escape") { window.close(); }\n');
         win.document.write('    });\n\n');
 
-        win.document.write('    // بدء التشغيل بعد تحميل الصفحة\n');
-        win.document.write('    if (document.readyState === "loading") {\n');
-        win.document.write('      document.addEventListener("DOMContentLoaded", initPreview);\n');
-        win.document.write('    } else {\n');
-        win.document.write('      // تأكد من تحميل Fabric.js\n');
+        // ---- الإصلاح الأساسي: منطق انتظار Fabric.js ----
+        win.document.write('    function waitForFabric(callback) {\n');
         win.document.write('      if (typeof fabric !== "undefined") {\n');
-        win.document.write('        initPreview();\n');
-        win.document.write('      } else {\n');
-        win.document.write('        var checkFabric = setInterval(function() {\n');
-        win.document.write('          if (typeof fabric !== "undefined") {\n');
-        win.document.write('            clearInterval(checkFabric);\n');
-        win.document.write('            initPreview();\n');
-        win.document.write('          }\n');
-        win.document.write('        }, 100);\n');
-        win.document.write('        // مهلة 5 ثواني\n');
-        win.document.write('        setTimeout(function() {\n');
-        win.document.write('          clearInterval(checkFabric);\n');
-        win.document.write('          if (!isInitialized) {\n');
-        win.document.write('            document.body.innerHTML = "<pre style=\\"color:red; padding:20px;\\">Fabric.js failed to load. Please check your internet connection.<\\/pre>";\n');
-        win.document.write('          }\n');
-        win.document.write('        }, 5000);\n');
+        win.document.write('        callback();\n');
+        win.document.write('        return;\n');
         win.document.write('      }\n');
-        win.document.write('    }\n');
+        win.document.write('      var check = setInterval(function() {\n');
+        win.document.write('        if (typeof fabric !== "undefined") {\n');
+        win.document.write('          clearInterval(check);\n');
+        win.document.write('          callback();\n');
+        win.document.write('        }\n');
+        win.document.write('      }, 50);\n');
+        win.document.write('      setTimeout(function() {\n');
+        win.document.write('        clearInterval(check);\n');
+        win.document.write('        if (typeof fabric === "undefined") {\n');
+        win.document.write('          document.body.innerHTML = "<pre style=\\"color:red; padding:20px;\\">Fabric.js failed to load. Please check your internet connection.<\\/pre>";\n');
+        win.document.write('        }\n');
+        win.document.write('      }, 5000);\n');
+        win.document.write('    }\n\n');
+
+        win.document.write('    waitForFabric(function() {\n');
+        win.document.write('      if (document.readyState === "loading") {\n');
+        win.document.write('        document.addEventListener("DOMContentLoaded", initPreview);\n');
+        win.document.write('      } else {\n');
+        win.document.write('        initPreview();\n');
+        win.document.write('      }\n');
+        win.document.write('    });\n');
+        // ---- نهاية الإصلاح ----
 
         win.document.write('  } catch (err) {\n');
         win.document.write('    console.error("Fatal error in preview:", err);\n');

@@ -738,63 +738,249 @@ function getActiveObjectsSafe(canvasInstance) {
         reader.readAsText(file);
     }
 
+    // ========== PREVIEW MODE (مصلح بالكامل) ==========
     function openPreviewMode() {
         saveCurrentSlideState();
+
+        // تنظيف بيانات الشرائح قبل الإرسال (تجنب المراجع الدائرية)
         var slidesData = [];
         for (var i = 0; i < slides.length; i++) {
-            slidesData.push({
-                name: slides[i].name,
-                canvasJSON: slides[i].canvasJSON ? JSON.parse(slides[i].canvasJSON) : null,
-                bgColor: slides[i].bgColor
-            });
+            try {
+                var slide = slides[i];
+                var cleanData = {
+                    name: slide.name || 'Slide ' + (i + 1),
+                    canvasJSON: slide.canvasJSON ? JSON.parse(JSON.stringify(JSON.parse(slide.canvasJSON))) : null,
+                    bgColor: slide.bgColor || '#2b2b2b'
+                };
+                slidesData.push(cleanData);
+            } catch (err) {
+                console.warn('Error cleaning slide data:', err);
+                // إرسال بيانات فارغة كبديل
+                slidesData.push({
+                    name: 'Slide ' + (i + 1),
+                    canvasJSON: null,
+                    bgColor: '#2b2b2b'
+                });
+            }
         }
+
         var currentIdx = currentSlideIndex;
-        var win = window.open();
-        if (!win) { alert('Popup blocked. Please allow popups.'); return; }
-        win.document.write('<!DOCTYPE html><html><head><title>Presentation Preview</title>');
-        win.document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"><\/script>');
-        win.document.write('<style>body{margin:0;overflow:hidden;background:#1e1e1e;font-family:"Segoe UI",sans-serif;}');
-        win.document.write('.preview-container{position:relative;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center;background:#000;}');
-        win.document.write('canvas{box-shadow:0 0 0 1px #3c3c3c;max-width:90vw;max-height:90vh;}');
-        win.document.write('.nav-controls{position:fixed;bottom:20px;left:0;right:0;text-align:center;background:rgba(0,0,0,0.7);padding:10px;color:white;z-index:100;}');
-        win.document.write('button{background:#007acc;border:none;color:white;padding:8px 16px;margin:0 8px;border-radius:8px;cursor:pointer;font-size:16px;}');
-        win.document.write('.slide-counter{margin:0 16px;font-size:16px;}');
-        win.document.write('.instruction{position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.5);padding:5px 10px;border-radius:8px;font-size:12px;}');
-        win.document.write('<\/style><\/head><body>');
-        win.document.write('<div class="preview-container"><canvas id="previewCanvas" width="900" height="600"></canvas></div>');
-        win.document.write('<div class="nav-controls"><button id="prevBtn">◀ Previous</button><span class="slide-counter" id="slideCounter">Slide 1 / 1</span><button id="nextBtn">Next ▶</button></div>');
-        win.document.write('<div class="instruction">← → keys | ESC to close</div>');
-        win.document.write('<script>');
-        win.document.write('var slidesData = ' + JSON.stringify(slidesData) + ';');
-        win.document.write('var currentIdx = ' + currentIdx + ';');
-        win.document.write('var canvas; var activeTimeouts = [];');
-        win.document.write('function clearEffects(){ for(var i=0;i<activeTimeouts.length;i++){ clearTimeout(activeTimeouts[i]); } activeTimeouts=[]; }');
-        win.document.write('function applyObjectEffect(obj, effectDef){ if(!obj||!effectDef) return;');
-        win.document.write('var easingMap={easeOutCubic:fabric.util.ease.easeOutCubic,easeOutBounce:fabric.util.ease.easeOutBounce,easeInOutQuad:fabric.util.ease.easeInOutQuad,linear:fabric.util.ease.linear};');
-        win.document.write('var easing=easingMap[effectDef.easing]||easingMap.easeOutCubic;');
-        win.document.write('var duration=effectDef.duration, delay=effectDef.delay, effect=effectDef.type, isInfinite=effectDef.infinite===true;');
-        win.document.write('function animateOnce(cb){ var origL=obj.left, origT=obj.top, origSX=obj.scaleX, origSY=obj.scaleY, origAng=obj.angle, origOp=obj.opacity||1; var target={};');
-        win.document.write('if(effect==="fadeIn"){ obj.set("opacity",0); target={opacity:origOp}; }');
-        win.document.write('else if(effect==="slideInLeft"){ obj.set("left",origL-300); target={left:origL}; }');
-        win.document.write('else if(effect==="slideInRight"){ obj.set("left",origL+300); target={left:origL}; }');
-        win.document.write('else if(effect==="slideInUp"){ obj.set("top",origT+200); target={top:origT}; }');
-        win.document.write('else if(effect==="slideInDown"){ obj.set("top",origT-200); target={top:origT}; }');
-        win.document.write('else if(effect==="zoomIn"){ obj.set("scaleX",0.1); obj.set("scaleY",0.1); target={scaleX:origSX, scaleY:origSY}; }');
-        win.document.write('else if(effect==="bounce"){ obj.set("scaleX",0.8); obj.set("scaleY",0.8); target={scaleX:origSX, scaleY:origSY}; }');
-        win.document.write('else if(effect==="flipX"){ obj.set("scaleX",-origSX); target={scaleX:origSX}; }');
-        win.document.write('else if(effect==="flipY"){ obj.set("scaleY",-origSY); target={scaleY:origSY}; }');
-        win.document.write('else if(effect==="rotateIn"){ obj.set("angle",-45); target={angle:origAng}; }');
-        win.document.write('else { if(cb) cb(); return; } canvas.renderAll(); obj.animate(target,{duration:easing:easing,onChange:canvas.renderAll.bind(canvas),onComplete:function(){ if(effect==="flipX") obj.set("scaleX",origSX); if(effect==="flipY") obj.set("scaleY",origSY); canvas.renderAll(); if(cb) cb(); }}); }');
-        win.document.write('function startLoop(){ animateOnce(function(){ if(isInfinite){ var t=setTimeout(startLoop, delay+duration+100); activeTimeouts.push(t); } }); }');
-        win.document.write('if(delay>0){ var t=setTimeout(startLoop, delay); activeTimeouts.push(t); } else startLoop(); }');
-        win.document.write('function loadSlide(index){ clearEffects(); var slide=slidesData[index]; if(slide&&slide.canvasJSON) canvas.loadFromJSON(slide.canvasJSON,function(){ if(slide.bgColor) canvas.setBackgroundColor(slide.bgColor,function(){canvas.renderAll();}); canvas.renderAll(); var objs=canvas.getObjects(); for(var i=0;i<objs.length;i++){ if(objs[i].effectDef) applyObjectEffect(objs[i], objs[i].effectDef); } }); else { canvas.clear(); if(slide&&slide.bgColor) canvas.setBackgroundColor(slide.bgColor,function(){canvas.renderAll();}); else canvas.setBackgroundColor("#2b2b2b",function(){canvas.renderAll();}); canvas.renderAll(); } document.getElementById("slideCounter").innerText="Slide "+(index+1)+" / "+slidesData.length; }');
-        win.document.write('function initPreview(){ var canvasElem=document.getElementById("previewCanvas"); canvas=new fabric.Canvas("previewCanvas",{selection:false,preserveObjectStacking:true}); canvas.setWidth(900); canvas.setHeight(600); loadSlide(currentIdx); }');
-        win.document.write('function nextSlide(){ if(currentIdx<slidesData.length-1){ currentIdx++; loadSlide(currentIdx); } }');
-        win.document.write('function prevSlide(){ if(currentIdx>0){ currentIdx--; loadSlide(currentIdx); } }');
-        win.document.write('document.getElementById("prevBtn").addEventListener("click", prevSlide); document.getElementById("nextBtn").addEventListener("click", nextSlide);');
-        win.document.write('window.addEventListener("keydown", function(e){ if(e.key==="ArrowLeft") prevSlide(); else if(e.key==="ArrowRight") nextSlide(); else if(e.key==="Escape") window.close(); });');
-        win.document.write('initPreview();<\/script>');
-        win.document.write('<\/body><\/html>');
+        var win = window.open('', '_blank', 'width=1024,height=768,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes');
+        if (!win) {
+            alert('Popup blocked. Please allow popups for this site.');
+            return;
+        }
+
+        // كتابة محتوى النافذة المنبثقة مع معالجة الأخطاء
+        win.document.write('<!DOCTYPE html>\n');
+        win.document.write('<html>\n');
+        win.document.write('<head>\n');
+        win.document.write('<meta charset="UTF-8">\n');
+        win.document.write('<title>Presentation Preview</title>\n');
+        win.document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"><\/script>\n');
+        win.document.write('<style>\n');
+        win.document.write('body{margin:0;overflow:hidden;background:#1e1e1e;font-family:"Segoe UI",sans-serif;}\n');
+        win.document.write('.preview-container{position:relative;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center;background:#000;}\n');
+        win.document.write('canvas{box-shadow:0 0 0 1px #3c3c3c;max-width:90vw;max-height:90vh;}\n');
+        win.document.write('.nav-controls{position:fixed;bottom:20px;left:0;right:0;text-align:center;background:rgba(0,0,0,0.7);padding:10px;color:white;z-index:100;}\n');
+        win.document.write('button{background:#007acc;border:none;color:white;padding:8px 16px;margin:0 8px;border-radius:8px;cursor:pointer;font-size:16px;}\n');
+        win.document.write('button:hover{background:#005f9e;}\n');
+        win.document.write('.slide-counter{margin:0 16px;font-size:16px;}\n');
+        win.document.write('.instruction{position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.5);padding:5px 10px;border-radius:8px;font-size:12px;}\n');
+        win.document.write('<\/style>\n');
+        win.document.write('<\/head>\n');
+        win.document.write('<body>\n');
+        win.document.write('<div class="preview-container"><canvas id="previewCanvas" width="900" height="600"></canvas></div>\n');
+        win.document.write('<div class="nav-controls"><button id="prevBtn">◀ Previous</button><span class="slide-counter" id="slideCounter">Slide 1 / 1</span><button id="nextBtn">Next ▶</button></div>\n');
+        win.document.write('<div class="instruction">← → keys | ESC to close</div>\n');
+
+        // كتابة السكربت الرئيسي مع معالجة الأخطاء
+        win.document.write('<script>\n');
+        win.document.write('(function() {\n');
+        win.document.write('  "use strict";\n');
+        win.document.write('  try {\n');
+        win.document.write('    var slidesData = ' + JSON.stringify(slidesData) + ';\n');
+        win.document.write('    var currentIdx = ' + currentIdx + ';\n');
+        win.document.write('    var canvas = null;\n');
+        win.document.write('    var activeTimeouts = [];\n');
+        win.document.write('    var isInitialized = false;\n\n');
+
+        win.document.write('    function clearEffects() {\n');
+        win.document.write('      for (var i = 0; i < activeTimeouts.length; i++) {\n');
+        win.document.write('        clearTimeout(activeTimeouts[i]);\n');
+        win.document.write('      }\n');
+        win.document.write('      activeTimeouts = [];\n');
+        win.document.write('    }\n\n');
+
+        win.document.write('    function applyObjectEffect(obj, effectDef) {\n');
+        win.document.write('      if (!obj || !effectDef) return;\n');
+        win.document.write('      var easingMap = {\n');
+        win.document.write('        easeOutCubic: fabric.util.ease.easeOutCubic,\n');
+        win.document.write('        easeOutBounce: fabric.util.ease.easeOutBounce,\n');
+        win.document.write('        easeInOutQuad: fabric.util.ease.easeInOutQuad,\n');
+        win.document.write('        linear: fabric.util.ease.linear\n');
+        win.document.write('      };\n');
+        win.document.write('      var easing = easingMap[effectDef.easing] || easingMap.easeOutCubic;\n');
+        win.document.write('      var duration = effectDef.duration || 800;\n');
+        win.document.write('      var delay = effectDef.delay || 0;\n');
+        win.document.write('      var effect = effectDef.type;\n');
+        win.document.write('      var isInfinite = effectDef.infinite === true;\n');
+        win.document.write('      var completed = false;\n\n');
+
+        win.document.write('      function animateOnce(cb) {\n');
+        win.document.write('        var origL = obj.left, origT = obj.top;\n');
+        win.document.write('        var origSX = obj.scaleX, origSY = obj.scaleY;\n');
+        win.document.write('        var origAng = obj.angle, origOp = obj.opacity !== undefined ? obj.opacity : 1;\n');
+        win.document.write('        var target = {};\n');
+        win.document.write('        switch(effect) {\n');
+        win.document.write('          case "fadeIn": obj.set("opacity", 0); target = { opacity: origOp }; break;\n');
+        win.document.write('          case "slideInLeft": obj.set("left", origL - 300); target = { left: origL }; break;\n');
+        win.document.write('          case "slideInRight": obj.set("left", origL + 300); target = { left: origL }; break;\n');
+        win.document.write('          case "slideInUp": obj.set("top", origT + 200); target = { top: origT }; break;\n');
+        win.document.write('          case "slideInDown": obj.set("top", origT - 200); target = { top: origT }; break;\n');
+        win.document.write('          case "zoomIn": obj.set("scaleX", 0.1); obj.set("scaleY", 0.1); target = { scaleX: origSX, scaleY: origSY }; break;\n');
+        win.document.write('          case "bounce": obj.set("scaleX", 0.8); obj.set("scaleY", 0.8); target = { scaleX: origSX, scaleY: origSY }; break;\n');
+        win.document.write('          case "flipX": obj.set("scaleX", -origSX); target = { scaleX: origSX }; break;\n');
+        win.document.write('          case "flipY": obj.set("scaleY", -origSY); target = { scaleY: origSY }; break;\n');
+        win.document.write('          case "rotateIn": obj.set("angle", -45); target = { angle: origAng }; break;\n');
+        win.document.write('          default: if (cb) cb(); return;\n');
+        win.document.write('        }\n');
+        win.document.write('        canvas.renderAll();\n');
+        win.document.write('        obj.animate(target, {\n');
+        win.document.write('          duration: duration,\n');
+        win.document.write('          easing: easing,\n');
+        win.document.write('          onChange: canvas.renderAll.bind(canvas),\n');
+        win.document.write('          onComplete: function() {\n');
+        win.document.write('            if (effect === "flipX") obj.set("scaleX", origSX);\n');
+        win.document.write('            if (effect === "flipY") obj.set("scaleY", origSY);\n');
+        win.document.write('            canvas.renderAll();\n');
+        win.document.write('            if (cb) cb();\n');
+        win.document.write('          }\n');
+        win.document.write('        });\n');
+        win.document.write('      }\n\n');
+
+        win.document.write('      function startLoop() {\n');
+        win.document.write('        animateOnce(function() {\n');
+        win.document.write('          if (isInfinite && !completed) {\n');
+        win.document.write('            var t = setTimeout(startLoop, delay + duration + 100);\n');
+        win.document.write('            activeTimeouts.push(t);\n');
+        win.document.write('          }\n');
+        win.document.write('        });\n');
+        win.document.write('      }\n\n');
+
+        win.document.write('      if (delay > 0) {\n');
+        win.document.write('        var t = setTimeout(startLoop, delay);\n');
+        win.document.write('        activeTimeouts.push(t);\n');
+        win.document.write('      } else {\n');
+        win.document.write('        startLoop();\n');
+        win.document.write('      }\n');
+        win.document.write('    }\n\n');
+
+        win.document.write('    function loadSlide(index) {\n');
+        win.document.write('      clearEffects();\n');
+        win.document.write('      if (!canvas || !isInitialized) { console.warn("Canvas not ready"); return; }\n');
+        win.document.write('      if (index < 0 || index >= slidesData.length) { console.warn("Invalid slide index"); return; }\n');
+        win.document.write('      var slide = slidesData[index];\n');
+        win.document.write('      try {\n');
+        win.document.write('        if (slide && slide.canvasJSON) {\n');
+        win.document.write('          canvas.loadFromJSON(slide.canvasJSON, function() {\n');
+        win.document.write('            if (slide.bgColor) canvas.setBackgroundColor(slide.bgColor, function() { canvas.renderAll(); });\n');
+        win.document.write('            canvas.renderAll();\n');
+        win.document.write('            var objs = canvas.getObjects();\n');
+        win.document.write('            for (var i = 0; i < objs.length; i++) {\n');
+        win.document.write('              if (objs[i].effectDef) {\n');
+        win.document.write('                applyObjectEffect(objs[i], objs[i].effectDef);\n');
+        win.document.write('              }\n');
+        win.document.write('            }\n');
+        win.document.write('          });\n');
+        win.document.write('        } else {\n');
+        win.document.write('          canvas.clear();\n');
+        win.document.write('          var bg = (slide && slide.bgColor) ? slide.bgColor : "#2b2b2b";\n');
+        win.document.write('          canvas.setBackgroundColor(bg, function() { canvas.renderAll(); });\n');
+        win.document.write('          canvas.renderAll();\n');
+        win.document.write('        }\n');
+        win.document.write('      } catch (err) {\n');
+        win.document.write('        console.error("Error loading slide:", err);\n');
+        win.document.write('        canvas.clear();\n');
+        win.document.write('        canvas.setBackgroundColor("#2b2b2b", function() { canvas.renderAll(); });\n');
+        win.document.write('      }\n');
+        win.document.write('      var counter = document.getElementById("slideCounter");\n');
+        win.document.write('      if (counter) counter.innerText = "Slide " + (index+1) + " / " + slidesData.length;\n');
+        win.document.write('    }\n\n');
+
+        win.document.write('    function initPreview() {\n');
+        win.document.write('      var canvasElem = document.getElementById("previewCanvas");\n');
+        win.document.write('      if (!canvasElem) { console.error("Canvas element not found"); return; }\n');
+        win.document.write('      try {\n');
+        win.document.write('        canvas = new fabric.Canvas("previewCanvas", {\n');
+        win.document.write('          selection: false,\n');
+        win.document.write('          preserveObjectStacking: true,\n');
+        win.document.write('          renderOnAddRemove: true\n');
+        win.document.write('        });\n');
+        win.document.write('        canvas.setWidth(900);\n');
+        win.document.write('        canvas.setHeight(600);\n');
+        win.document.write('        isInitialized = true;\n');
+        win.document.write('        loadSlide(currentIdx);\n');
+        win.document.write('        console.log("Preview initialized successfully");\n');
+        win.document.write('      } catch (err) {\n');
+        win.document.write('        console.error("Failed to initialize preview:", err);\n');
+        win.document.write('        document.body.innerHTML = "<pre style=\\"color:red; padding:20px;\\">Error initializing preview: " + err.message + "<\\/pre>";\n');
+        win.document.write('      }\n');
+        win.document.write('    }\n\n');
+
+        win.document.write('    function nextSlide() {\n');
+        win.document.write('      if (currentIdx < slidesData.length - 1) { currentIdx++; loadSlide(currentIdx); }\n');
+        win.document.write('    }\n\n');
+
+        win.document.write('    function prevSlide() {\n');
+        win.document.write('      if (currentIdx > 0) { currentIdx--; loadSlide(currentIdx); }\n');
+        win.document.write('    }\n\n');
+
+        win.document.write('    // ربط الأزرار\n');
+        win.document.write('    var prevBtn = document.getElementById("prevBtn");\n');
+        win.document.write('    var nextBtn = document.getElementById("nextBtn");\n');
+        win.document.write('    if (prevBtn) prevBtn.addEventListener("click", prevSlide);\n');
+        win.document.write('    if (nextBtn) nextBtn.addEventListener("click", nextSlide);\n\n');
+
+        win.document.write('    // اختصارات لوحة المفاتيح\n');
+        win.document.write('    window.addEventListener("keydown", function(e) {\n');
+        win.document.write('      if (e.key === "ArrowLeft") { e.preventDefault(); prevSlide(); }\n');
+        win.document.write('      else if (e.key === "ArrowRight") { e.preventDefault(); nextSlide(); }\n');
+        win.document.write('      else if (e.key === "Escape") { window.close(); }\n');
+        win.document.write('    });\n\n');
+
+        win.document.write('    // بدء التشغيل بعد تحميل الصفحة\n');
+        win.document.write('    if (document.readyState === "loading") {\n');
+        win.document.write('      document.addEventListener("DOMContentLoaded", initPreview);\n');
+        win.document.write('    } else {\n');
+        win.document.write('      // تأكد من تحميل Fabric.js\n');
+        win.document.write('      if (typeof fabric !== "undefined") {\n');
+        win.document.write('        initPreview();\n');
+        win.document.write('      } else {\n');
+        win.document.write('        var checkFabric = setInterval(function() {\n');
+        win.document.write('          if (typeof fabric !== "undefined") {\n');
+        win.document.write('            clearInterval(checkFabric);\n');
+        win.document.write('            initPreview();\n');
+        win.document.write('          }\n');
+        win.document.write('        }, 100);\n');
+        win.document.write('        // مهلة 5 ثواني\n');
+        win.document.write('        setTimeout(function() {\n');
+        win.document.write('          clearInterval(checkFabric);\n');
+        win.document.write('          if (!isInitialized) {\n');
+        win.document.write('            document.body.innerHTML = "<pre style=\\"color:red; padding:20px;\\">Fabric.js failed to load. Please check your internet connection.<\\/pre>";\n');
+        win.document.write('          }\n');
+        win.document.write('        }, 5000);\n');
+        win.document.write('      }\n');
+        win.document.write('    }\n');
+
+        win.document.write('  } catch (err) {\n');
+        win.document.write('    console.error("Fatal error in preview:", err);\n');
+        win.document.write('    document.body.innerHTML = "<pre style=\\"color:red; padding:20px;\\">Fatal error: " + err.stack + "<\\/pre>";\n');
+        win.document.write('  }\n');
+        win.document.write('})();\n');
+        win.document.write('<\/script>\n');
+        win.document.write('<\/body>\n');
+        win.document.write('<\/html>');
         win.document.close();
     }
 
